@@ -39,13 +39,13 @@ int init() {
 }
 
 int initButton() {
-    SDL_Surface* startButtonSurface = SDL_LoadBMP("start_button.bmp");
-    SDL_Surface* quitButtonSurface = SDL_LoadBMP("quit_button.bmp");
-    SDL_Surface* backButtonSurface = SDL_LoadBMP("return_button.bmp");
-    SDL_Surface* titleSurface = SDL_LoadBMP("title.bmp");
-    SDL_Surface* mapSurface = SDL_LoadBMP("white_map.bmp");
-    SDL_Surface* bagpackSurface = SDL_LoadBMP("bagpack.bmp");
-    SDL_Surface* homepageSurface = SDL_LoadBMP("homepage.bmp");
+    SDL_Surface* startButtonSurface = SDL_LoadBMP("images/start_button.bmp");
+    SDL_Surface* quitButtonSurface = SDL_LoadBMP("images/quit_button.bmp");
+    SDL_Surface* backButtonSurface = SDL_LoadBMP("images/return_button.bmp");
+    SDL_Surface* titleSurface = SDL_LoadBMP("images/title.bmp");
+    SDL_Surface* mapSurface = SDL_LoadBMP("images/white_map.bmp");
+    SDL_Surface* bagpackSurface = SDL_LoadBMP("images/bagpack.bmp");
+    SDL_Surface* homepageSurface = SDL_LoadBMP("images/homepage.bmp");
     startButtonTexture = SDL_CreateTextureFromSurface(renderer, startButtonSurface);
     quitButtonTexture = SDL_CreateTextureFromSurface(renderer, quitButtonSurface);
     backButtonTexture = SDL_CreateTextureFromSurface(renderer, backButtonSurface);
