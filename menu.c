@@ -4,24 +4,30 @@
 const int SCREEN_WIDTH = 1280;
 const int SCREEN_HEIGHT = 720;
 
-SDL_Window* window;
-SDL_Window* bagWindow;
-SDL_Renderer* renderer;
-SDL_Renderer* bagRenderer;
+SDL_Window* window;           // 主視窗
+SDL_Window* bagWindow;        // 背包視窗
+
+SDL_Renderer* renderer;       // 主視窗的render
+SDL_Renderer* bagRenderer;    // 背包視窗的render
+
 SDL_Texture* startButtonTexture;
 SDL_Texture* quitButtonTexture;
-SDL_Texture* backButtonTexture;
 SDL_Texture* titleTexture;
-SDL_Texture* mapTexture;
 SDL_Texture* bagpackTexture;
 SDL_Texture* homepageTexture;
+SDL_Texture* images[6];
+SDL_Texture* gameTileTexture;
+SDL_Texture* chanceTileTexture;
+SDL_Texture* normalTileTexture;
+SDL_Texture* sodaTileTexture;
+SDL_Texture* startTileTexture;
+SDL_Texture* shopTileTexture;
 
 // 各個物件的位置
-SDL_Rect startButtonRect = { 260, 500, 335, 135 };
-SDL_Rect quitButtonRect = { 280, 650, 284, 120 };
+SDL_Rect startButtonRect = { 760, 200, 335, 135 };
+SDL_Rect quitButtonRect = { 780, 400, 284, 120 };
 SDL_Rect backButtonRect = { 10, 5, 40, 40 };
-SDL_Rect titleRect = { 120, 20, 551,  444};
-SDL_Rect mapRect = { 0, 0, 800, 800 };
+SDL_Rect titleRect = { 120, 120, 551,  444};
 SDL_Rect bagpackRect = {180, 120, 50, 50};
 SDL_Rect homepageRect = {120, 120, 50, 50};
 
@@ -35,31 +41,39 @@ int init() {
     window = SDL_CreateWindow("Ginger Soda", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     SDL_SetRenderDrawColor(renderer, menuBackgrounColor.r, menuBackgrounColor.g, menuBackgrounColor.b, menuBackgrounColor.a);
-    return 1;
-}
-
-int initButton() {
+    
     SDL_Surface* startButtonSurface = SDL_LoadBMP("images/start_button.bmp");
     SDL_Surface* quitButtonSurface = SDL_LoadBMP("images/quit_button.bmp");
-    SDL_Surface* backButtonSurface = SDL_LoadBMP("images/return_button.bmp");
     SDL_Surface* titleSurface = SDL_LoadBMP("images/title.bmp");
-    SDL_Surface* mapSurface = SDL_LoadBMP("images/white_map.bmp");
     SDL_Surface* bagpackSurface = SDL_LoadBMP("images/bagpack.bmp");
     SDL_Surface* homepageSurface = SDL_LoadBMP("images/homepage.bmp");
+    SDL_Surface* gameTileSurface = SDL_LoadBMP("images/gameTile.bmp");
+    SDL_Surface* chanceTileSurface = SDL_LoadBMP("images/chanceTile.bmp");
+    SDL_Surface* normalTileSurface = SDL_LoadBMP("images/normalTile.bmp");
+    SDL_Surface* sodaTileSurface = SDL_LoadBMP("images/sodaTile.bmp");
+    SDL_Surface* startTileSurface = SDL_LoadBMP("images/startTile.bmp");
+    SDL_Surface* shopTileSurface = SDL_LoadBMP("images/shopTile.bmp");
     startButtonTexture = SDL_CreateTextureFromSurface(renderer, startButtonSurface);
     quitButtonTexture = SDL_CreateTextureFromSurface(renderer, quitButtonSurface);
-    backButtonTexture = SDL_CreateTextureFromSurface(renderer, backButtonSurface);
     titleTexture = SDL_CreateTextureFromSurface(renderer, titleSurface);
-    mapTexture = SDL_CreateTextureFromSurface(renderer, mapSurface);
     bagpackTexture = SDL_CreateTextureFromSurface(renderer, bagpackSurface);
     homepageTexture = SDL_CreateTextureFromSurface(renderer, homepageSurface);
+    images[0] = SDL_CreateTextureFromSurface(renderer, gameTileSurface);
+    images[1] = SDL_CreateTextureFromSurface(renderer, chanceTileSurface);
+    images[2] = SDL_CreateTextureFromSurface(renderer, normalTileSurface);
+    images[3] = SDL_CreateTextureFromSurface(renderer, sodaTileSurface);
+    images[4] = SDL_CreateTextureFromSurface(renderer, startTileSurface);
+    images[5] = SDL_CreateTextureFromSurface(renderer, shopTileSurface);
     SDL_FreeSurface(startButtonSurface);
     SDL_FreeSurface(quitButtonSurface);
-    SDL_FreeSurface(backButtonSurface);
     SDL_FreeSurface(titleSurface);
-    SDL_FreeSurface(mapSurface);
     SDL_FreeSurface(bagpackSurface);
-    SDL_FreeSurface(homepageSurface);
+    SDL_FreeSurface(gameTileSurface);
+    SDL_FreeSurface(chanceTileSurface);
+    SDL_FreeSurface(normalTileSurface);
+    SDL_FreeSurface(sodaTileSurface);
+    SDL_FreeSurface(startTileSurface);
+    SDL_FreeSurface(shopTileSurface);
     return 1;
 }
 
@@ -75,19 +89,78 @@ int initBag(int mouseX, int mouseY) {
     return 1;               
 }
 
+void shuffleImages(int* imageOrder, int numImages) {
+    // 隨機種子
+    srand(time(NULL));
+
+    int imageCounts[] = {6, 12, 9, 1}; // images[0]～images[3]各自的數量
+    int index = 0;
+    // 將每個images的index依照各自的數量放到imageOrder
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < imageCounts[i]; ++j) {
+            imageOrder[index++] = i;
+        }
+    }
+
+    // 隨機交換imageOrder中的元素
+    for (int i = numImages - 1; i > 0; --i) {
+        int j = rand() % (i + 1);
+        int temp = imageOrder[i];
+        imageOrder[i] = imageOrder[j];
+        imageOrder[j] = temp;
+    }
+}
+
+void renderGameScreen(int* imageOrder) {
+    
+    // 地圖位置（chance、game、normal、soda）
+    int positions[28][2] = {
+        {640, 0}, {720, 0}, {800, 0}, {880, 0}, {960, 0}, {1040, 0}, {1120, 0},
+        {640, 640}, {720, 640}, {800, 640}, {880, 640}, {960, 640}, {1040, 640}, {1120, 640},
+        {560, 80}, {560, 160}, {560, 240}, {560, 320}, {560, 400}, {560, 480}, {560, 560},
+        {1200, 80}, {1200, 160}, {1200, 240}, {1200, 320}, {1200, 400}, {1200, 480}, {1200, 560}
+    };
+    // 地圖位置（shop、start）
+    int fixedPositions[4][2] = {
+        {560,0}, {1200,0}, {560,640}, {1200,640}
+    };
+
+    for (int i = 0; i < 4; i++) {
+        SDL_Rect rect = {fixedPositions[i][0], fixedPositions[i][1], 80, 80};
+        SDL_RenderCopy(renderer, images[5], NULL, &rect);
+        if (i == 3) {
+            SDL_Rect rect = {fixedPositions[i][0], fixedPositions[i][1], 80, 80};
+            SDL_RenderCopy(renderer, images[4], NULL, &rect);
+            break;
+        }
+    }
+    for (int i = 0; i < 28; i++) {
+        SDL_Rect rect = {positions[i][0], positions[i][1], 80, 80};
+        int randomIndex = imageOrder[i];
+        SDL_RenderCopy(renderer, images[randomIndex], NULL, &rect);
+    }
+}
+
+
 int close() {
     SDL_DestroyTexture(startButtonTexture);
     SDL_DestroyTexture(quitButtonTexture);
-    SDL_DestroyTexture(backButtonTexture);
     SDL_DestroyTexture(titleTexture);
-    SDL_DestroyTexture(mapTexture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    for (int i = 0; i < 6; ++i) {
+        SDL_DestroyTexture(images[i]);
+    } 
     SDL_Quit();
     return 1;
 }
 
 void processEvents() {
+
+    const int numImages = 28;
+    int imageOrder[numImages];
+    shuffleImages(imageOrder, numImages);
+
     SDL_Event event;
     int running = 1;
     int currentScreen = MAIN_MENU;
@@ -118,7 +191,7 @@ void processEvents() {
                     }
                 }
             } else if (event.type == SDL_WINDOWEVENT && bagWindow != NULL) {
-                // 處理新視窗的事件
+                // 處理bag視窗的事件
                 if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(bagWindow)) {
                     // 如果新視窗關閉了，則銷毀它
                     SDL_DestroyRenderer(bagRenderer);
@@ -134,7 +207,7 @@ void processEvents() {
             SDL_RenderCopy(renderer, quitButtonTexture, NULL, &quitButtonRect);
             SDL_RenderCopy(renderer, titleTexture, NULL, &titleRect);
         } else if (currentScreen == GAME_SCREEN) {
-            SDL_RenderCopy(renderer, mapTexture, NULL, &mapRect);
+            renderGameScreen(imageOrder);
             SDL_RenderCopy(renderer, homepageTexture, NULL, &homepageRect);
             SDL_RenderCopy(renderer, bagpackTexture, NULL, &bagpackRect);
         }
@@ -144,7 +217,6 @@ void processEvents() {
 
 int main() {
     init();
-    initButton();
     processEvents();
     close();
     return 0;

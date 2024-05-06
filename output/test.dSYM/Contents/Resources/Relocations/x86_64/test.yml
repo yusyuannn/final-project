@@ -1,0 +1,8 @@
+---
+triple:          'x86_64-apple-darwin'
+binary-path:     '/Users/syuan/Desktop/FinalProject/output/test'
+relocations:
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _shuffleImages, symObjAddr: 0x0, symBinAddr: 0x100000CD0, symSize: 0x140 }
+  - { offsetInCU: 0x41, offset: 0x41, size: 0x8, addend: 0x0, symName: _shuffleImages, symObjAddr: 0x0, symBinAddr: 0x100000CD0, symSize: 0x140 }
+  - { offsetInCU: 0x10E, offset: 0x10E, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x140, symBinAddr: 0x100000E10, symSize: 0x124 }
+...
