@@ -1,47 +1,47 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <SDL2/SDL.h>
-#include "menu.h"
+#include "game.h"
 
-const int SCREEN_WIDTH = 1280;
-const int SCREEN_HEIGHT = 720;
 
-SDL_Window* window;           // 主視窗
-SDL_Window* bagWindow;        // 背包視窗
+int main(int argc, char** argv){
+    const int numImages = 28;
+    int MAP[numImages];
 
-SDL_Renderer* renderer;       // 主視窗的render
-SDL_Renderer* bagRenderer;    // 背包視窗的render
+    if(!GAME_init(MAP, numImages)){
+        printf("game initialization failed");
+    }
 
-SDL_Texture* startButtonTexture;
-SDL_Texture* quitButtonTexture;
-SDL_Texture* titleTexture;
-SDL_Texture* bagpackTexture;
-SDL_Texture* homepageTexture;
-SDL_Texture* square[6];
-SDL_Texture* gameTileTexture;
-SDL_Texture* chanceTileTexture;
-SDL_Texture* normalTileTexture;
-SDL_Texture* sodaTileTexture;
-SDL_Texture* startTileTexture;
-SDL_Texture* shopTileTexture;
+    GAME_end();
 
-// 各個物件的位置
-SDL_Rect startButtonRect = { 760, 200, 335, 135 };
-SDL_Rect quitButtonRect = { 780, 400, 284, 120 };
-SDL_Rect backButtonRect = { 10, 5, 40, 40 };
-SDL_Rect titleRect = { 120, 120, 551,  444};
-SDL_Rect bagpackRect = {180, 120, 50, 50};
-SDL_Rect homepageRect = {120, 120, 50, 50};
+    return 0;
+}
 
-// 初始背景顏色
-SDL_Color menuBackgrounColor = {254,252,251,0xFF};
+int GAME_init(int* MAP, int numImages){
+    initialize_menu();
+    initialize_texture();
+    initialize_map(MAP, numImages);
+    render_map_and_player(MAP);
 
-enum Screen { MAIN_MENU, GAME_SCREEN };
+    return 1;
+}
 
-int init() {
+void GAME_end(){
+    if(!close()){
+        printf("game close failed\n");
+    }
+}
+
+// 初始化menu
+void initialize_menu(){ 
     SDL_Init(SDL_INIT_VIDEO);
     window = SDL_CreateWindow("Ginger Soda", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     SDL_SetRenderDrawColor(renderer, menuBackgrounColor.r, menuBackgrounColor.g, menuBackgrounColor.b, menuBackgrounColor.a);
-    
+}
+
+// 載入圖片為texture
+void initialize_texture(){  
     SDL_Surface* startButtonSurface = SDL_LoadBMP("images/start_button.bmp");
     SDL_Surface* quitButtonSurface = SDL_LoadBMP("images/quit_button.bmp");
     SDL_Surface* titleSurface = SDL_LoadBMP("images/title.bmp");
@@ -52,18 +52,22 @@ int init() {
     SDL_Surface* normalTileSurface = SDL_LoadBMP("images/normalTile.bmp");
     SDL_Surface* sodaTileSurface = SDL_LoadBMP("images/sodaTile.bmp");
     SDL_Surface* startTileSurface = SDL_LoadBMP("images/startTile.bmp");
-    SDL_Surface* shopTileSurface = SDL_LoadBMP("images/storeTile.bmp");
+    SDL_Surface* storeTileSurface = SDL_LoadBMP("images/storeTile.bmp");
+    SDL_Surface* player1TileSurface = SDL_LoadBMP("images/black_circle.bmp");
+    SDL_Surface* player2TileSurface = SDL_LoadBMP("images/white_circle.bmp");
     startButtonTexture = SDL_CreateTextureFromSurface(renderer, startButtonSurface);
     quitButtonTexture = SDL_CreateTextureFromSurface(renderer, quitButtonSurface);
     titleTexture = SDL_CreateTextureFromSurface(renderer, titleSurface);
     bagpackTexture = SDL_CreateTextureFromSurface(renderer, bagpackSurface);
     homepageTexture = SDL_CreateTextureFromSurface(renderer, homepageSurface);
-    square[0] = SDL_CreateTextureFromSurface(renderer, gameTileSurface);
-    square[1] = SDL_CreateTextureFromSurface(renderer, chanceTileSurface);
-    square[2] = SDL_CreateTextureFromSurface(renderer, normalTileSurface);
-    square[3] = SDL_CreateTextureFromSurface(renderer, sodaTileSurface);
-    square[4] = SDL_CreateTextureFromSurface(renderer, startTileSurface);
-    square[5] = SDL_CreateTextureFromSurface(renderer, shopTileSurface);
+    square[SQUARE_normal] = SDL_CreateTextureFromSurface(renderer, normalTileSurface);
+    square[SQUARE_chance] = SDL_CreateTextureFromSurface(renderer, chanceTileSurface);
+    square[SQUARE_game] = SDL_CreateTextureFromSurface(renderer, gameTileSurface);
+    square[SQUARE_store] = SDL_CreateTextureFromSurface(renderer, storeTileSurface);
+    square[SQUARE_ginger_soda] = SDL_CreateTextureFromSurface(renderer, sodaTileSurface);
+    square[SQUARE_start] = SDL_CreateTextureFromSurface(renderer, startTileSurface);
+    player[0] = SDL_CreateTextureFromSurface(renderer, player1TileSurface);
+    player[1] = SDL_CreateTextureFromSurface(renderer, player2TileSurface);
     SDL_FreeSurface(startButtonSurface);
     SDL_FreeSurface(quitButtonSurface);
     SDL_FreeSurface(titleSurface);
@@ -73,36 +77,22 @@ int init() {
     SDL_FreeSurface(normalTileSurface);
     SDL_FreeSurface(sodaTileSurface);
     SDL_FreeSurface(startTileSurface);
-    SDL_FreeSurface(shopTileSurface);
-    return 1;
+    SDL_FreeSurface(storeTileSurface);
+    SDL_FreeSurface(player1TileSurface);
+    SDL_FreeSurface(player2TileSurface);
 }
 
-int initBag(int mouseX, int mouseY) {
-    // 獲取點擊位置相對於視窗的坐標
-    int winX, winY;
-    SDL_GetWindowPosition(window, &winX, &winY);
-    // 計算新視窗的位置
-    int newX = winX + mouseX;
-    int newY = winY + mouseY;
-    bagWindow = SDL_CreateWindow("Bag", newX, newY, 400, 300, SDL_WINDOW_SHOWN);
-    bagRenderer = SDL_CreateRenderer(bagWindow, -1, SDL_RENDERER_ACCELERATED);
-    return 1;               
-}
-
-void shuffleImages(int* imageOrder, int numImages) {
-    // 隨機種子
+// 初始化地圖
+void initialize_map(int* imageOrder, int numImages){
+    /* 隨機交換imageOrder中的元素 */
     srand(time(NULL));
-
-    int imageCounts[] = {6, 12, 9, 1}; // images[0]～images[3]各自的數量
+    int imageCounts[] = {9, 12, 6, 0, 1, 0}; // square各自的數量
     int index = 0;
-    // 將每個images的index依照各自的數量放到imageOrder
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < 6; ++i) {
         for (int j = 0; j < imageCounts[i]; ++j) {
             imageOrder[index++] = i;
         }
     }
-
-    // 隨機交換imageOrder中的元素
     for (int i = numImages - 1; i > 0; --i) {
         int j = rand() % (i + 1);
         int temp = imageOrder[i];
@@ -111,56 +101,16 @@ void shuffleImages(int* imageOrder, int numImages) {
     }
 }
 
-void renderGameScreen(int* imageOrder) {
-    
-    // 地圖位置（chance、game、normal、soda）
-    int positions[28][2] = {
-        {640, 0}, {720, 0}, {800, 0}, {880, 0}, {960, 0}, {1040, 0}, {1120, 0},
-        {640, 640}, {720, 640}, {800, 640}, {880, 640}, {960, 640}, {1040, 640}, {1120, 640},
-        {560, 80}, {560, 160}, {560, 240}, {560, 320}, {560, 400}, {560, 480}, {560, 560},
-        {1200, 80}, {1200, 160}, {1200, 240}, {1200, 320}, {1200, 400}, {1200, 480}, {1200, 560}
-    };
-    // 地圖位置（shop、start）
-    int fixedPositions[4][2] = {
-        {560,0}, {1200,0}, {560,640}, {1200,640}
-    };
-
-    for (int i = 0; i < 4; i++) {
-        SDL_Rect rect = {fixedPositions[i][0], fixedPositions[i][1], 80, 80};
-        SDL_RenderCopy(renderer, square[5], NULL, &rect);
-        if (i == 3) {
-            SDL_Rect rect = {fixedPositions[i][0], fixedPositions[i][1], 80, 80};
-            SDL_RenderCopy(renderer, square[4], NULL, &rect);
-            break;
-        }
-    }
-    for (int i = 0; i < 28; i++) {
-        SDL_Rect rect = {positions[i][0], positions[i][1], 80, 80};
-        int randomIndex = imageOrder[i];
-        SDL_RenderCopy(renderer, square[randomIndex], NULL, &rect);
-    }
+void initialize_player(){
+    // 玩家資料清乾淨，然後給玩家輸入名字
+    char* buffer = (char*)malloc(21*sizeof(char));
+    scanf("%20s", buffer);
+    // 然後給玩家這個名字這樣
 }
 
-
-int close() {
-    SDL_DestroyTexture(startButtonTexture);
-    SDL_DestroyTexture(quitButtonTexture);
-    SDL_DestroyTexture(titleTexture);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    for (int i = 0; i < 6; ++i) {
-        SDL_DestroyTexture(square[i]);
-    } 
-    SDL_Quit();
-    return 1;
-}
-
-void processEvents() {
-
-    const int numImages = 28;
-    int imageOrder[numImages];
-    shuffleImages(imageOrder, numImages);
-
+// 顯示畫面
+void render_map_and_player(int* MAP){
+    // 用SDL render東西這樣
     SDL_Event event;
     int running = 1;
     int currentScreen = MAIN_MENU;
@@ -187,7 +137,7 @@ void processEvents() {
                     } else if (mouseX >= bagpackRect.x && mouseX < bagpackRect.x + bagpackRect.w &&
                                mouseY >= bagpackRect.y && mouseY < bagpackRect.y + bagpackRect.h &&
                                event.button.button == SDL_BUTTON_LEFT) {
-                                initBag(mouseX, mouseY);
+                                //initBag(mouseX, mouseY);
                     }
                 }
             } else if (event.type == SDL_WINDOWEVENT && bagWindow != NULL) {
@@ -207,7 +157,20 @@ void processEvents() {
             SDL_RenderCopy(renderer, quitButtonTexture, NULL, &quitButtonRect);
             SDL_RenderCopy(renderer, titleTexture, NULL, &titleRect);
         } else if (currentScreen == GAME_SCREEN) {
-            renderGameScreen(imageOrder);
+            for (int i = 0; i < 4; i++) {
+                SDL_Rect rect = {mapFixedPositions[i][0], mapFixedPositions[i][1], 80, 80};
+                SDL_RenderCopy(renderer, square[SQUARE_store], NULL, &rect);
+                if (i == 3) {
+                    SDL_Rect rect = {mapFixedPositions[i][0], mapFixedPositions[i][1], 80, 80};
+                    SDL_RenderCopy(renderer, square[SQUARE_start], NULL, &rect);
+                    break;
+                }
+            }
+            for (int i = 0; i < 28; i++) {
+                SDL_Rect rect = {mapPositions[i][0], mapPositions[i][1], 80, 80};
+                int randomIndex = MAP[i];
+                SDL_RenderCopy(renderer, square[randomIndex], NULL, &rect);
+            }
             SDL_RenderCopy(renderer, homepageTexture, NULL, &homepageRect);
             SDL_RenderCopy(renderer, bagpackTexture, NULL, &bagpackRect);
         }
@@ -215,10 +178,16 @@ void processEvents() {
     }
 }
 
-int main() {
-    init();
-    processEvents();
-    close();
-    return 0;
+// 釋放資源
+int close() {
+    SDL_DestroyTexture(startButtonTexture);
+    SDL_DestroyTexture(quitButtonTexture);
+    SDL_DestroyTexture(titleTexture);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    for (int i = 0; i < 6; ++i) {
+        SDL_DestroyTexture(square[i]);
+    } 
+    SDL_Quit();
+    return 1;
 }
-
