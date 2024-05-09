@@ -4,10 +4,10 @@
 
 typedef struct {
     char* name;
-    int position;
+    int position[2];
     int money;
     int ginger_soda;
-    int effect;
+    //int effect;
 } Player;
 
 typedef enum {
@@ -32,6 +32,13 @@ typedef enum {
     GAME_SCREEN
 } Screen;
 
+typedef enum {
+    UP,
+    LEFT,
+    DOWN,
+    RIGHT
+}Movement;
+
 const int SCREEN_WIDTH = 1280;
 const int SCREEN_HEIGHT = 720;
 
@@ -51,6 +58,7 @@ SDL_Texture* bagpackTexture;
 SDL_Texture* homepageTexture;
 SDL_Texture* square[6];
 SDL_Texture* player[player_num];
+SDL_Texture* diceTexture;
 
 // 位置
 SDL_Rect startButtonRect = { 760, 200, 335, 135 };
@@ -66,9 +74,16 @@ int mapPositions[28][2] = {
         {1200, 80}, {1200, 160}, {1200, 240}, {1200, 320}, {1200, 400}, {1200, 480}, {1200, 560} };
 int mapFixedPositions[4][2] = {
     {560,0}, {1200,0}, {560,640}, {1200,640} };
+SDL_Rect diceRect = {880, 320, 80, 80};
 
 // 背景顏色
 SDL_Color menuBackgrounColor = {254,252,251,0xFF};
+
+// 玩家設定
+int currentPlayer;
+Player player1;
+Player player2;
+int dir[2] = {RIGHT, RIGHT};
 
 int GAME_init(int*, int);
 void GAME_end();
@@ -78,3 +93,5 @@ void initialize_map(int*, int);
 void initialize_player();
 void render_map_and_player(int*);
 int close();
+int roll_dice();
+void updatePlayerPosition(int, int);
