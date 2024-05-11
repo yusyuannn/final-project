@@ -7,7 +7,7 @@
 
 
 int main(){
-    const int numImages = 28;
+    const int numImages = 32;
     int MAP[numImages];
 
     if(!GAME_init(MAP, numImages)){
@@ -93,18 +93,27 @@ void initialize_map(int* imageOrder, int numImages){
     /* 隨機交換imageOrder中的元素 */
     srand(time(NULL));
     int imageCounts[] = {9, 12, 6, 0, 1, 0}; // square各自的數量
-    int index = 0;
+    imageOrder[0] = SQUARE_store;
+    imageOrder[1] = SQUARE_store;
+    imageOrder[2] = SQUARE_store;
+    imageOrder[3] = SQUARE_start;
+    int index = 4;
     for (int i = 0; i < 6; ++i) {
         for (int j = 0; j < imageCounts[i]; ++j) {
             imageOrder[index++] = i;
         }
     }
-    for (int i = numImages - 1; i > 0; --i) {
-        int j = rand() % (i + 1);
+    for (int i = numImages - 1; i >= 4; --i) {
+        //int j = rand() % (i + 1);
+        int j = 4 + rand() % (32 - 4);
         int temp = imageOrder[i];
         imageOrder[i] = imageOrder[j];
         imageOrder[j] = temp;
     }
+    /* for (int i =0; i < 32; i++) {
+        printf("%d ", imageOrder[i]);
+    }
+    printf("\n"); */
 }
 
 void initialize_player(){
@@ -122,12 +131,14 @@ void render_map_and_player(int* MAP){
     // 用SDL render東西這樣
     SDL_Event event;
     int running = 1;
+    float game_round = 20; // 行動回數
     int currentScreen = MAIN_MENU;
-    while (running) {
+    while (running && game_round) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = 0;
             } else if (event.type == SDL_MOUSEBUTTONDOWN) {
+                // 得到滑鼠位置
                 int mouseX, mouseY;
                 SDL_GetMouseState(&mouseX, &mouseY);
                 if (currentScreen == MAIN_MENU) {
@@ -154,20 +165,24 @@ void render_map_and_player(int* MAP){
                         //printf("STEPS: %d\n", steps);
                         if (currentPlayer == 0) {
                             updatePlayerPosition(steps, currentPlayer); // 更新玩家1位置
+                            square_event(MAP, currentPlayer);
+                            //game_round -= 0.5;
                         } else {
                             updatePlayerPosition(steps, currentPlayer); // 更新玩家2位置
+                            square_event(MAP, currentPlayer);
+                            //game_round -= 0.5;
                         }
                         currentPlayer = (currentPlayer + 1) % player_num;
                     }
                 }
-            } else if (event.type == SDL_WINDOWEVENT && bagWindow != NULL) {
-                // 處理bag視窗的事件
-                if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(bagWindow)) {
+            } else if (event.type == SDL_WINDOWEVENT && newWindow != NULL) {
+                // 處理新視窗的事件
+                if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(newWindow)) {
                     // 如果新視窗關閉了，則銷毀它
-                    SDL_DestroyRenderer(bagRenderer);
-                    SDL_DestroyWindow(bagWindow);
-                    bagRenderer = NULL;
-                    bagWindow = NULL;
+                    SDL_DestroyRenderer(newRenderer);
+                    SDL_DestroyWindow(newWindow);
+                    newRenderer = NULL;
+                    newWindow = NULL;
                 }
             }
         }
@@ -178,17 +193,8 @@ void render_map_and_player(int* MAP){
             SDL_RenderCopy(renderer, titleTexture, NULL, &titleRect);
         } else if (currentScreen == GAME_SCREEN) {
             // 顯示地圖
-            for (int i = 0; i < 4; i++) {
-                SDL_Rect rect = {mapFixedPositions[i][0], mapFixedPositions[i][1], 80, 80};
-                SDL_RenderCopy(renderer, square[SQUARE_store], NULL, &rect);
-                if (i == 3) {
-                    SDL_Rect rect = {mapFixedPositions[i][0], mapFixedPositions[i][1], 80, 80};
-                    SDL_RenderCopy(renderer, square[SQUARE_start], NULL, &rect);
-                    break;
-                }
-            }
-            for (int i = 0; i < 28; i++) {
-                SDL_Rect rect = {mapPositions[i][0], mapPositions[i][1], 80, 80};
+            for (int i = 0; i < 32; i++) {
+                SDL_Rect rect = {mapRect[i][0], mapRect[i][1], 80, 80};
                 int randomIndex = MAP[i];
                 SDL_RenderCopy(renderer, square[randomIndex], NULL, &rect);
             }
@@ -253,6 +259,93 @@ void updatePlayerPosition(int steps, int currentPlayer) {
             steps--;
         }
     }
+}
+
+Square_type getSquareTypeFromPosition(int x, int y, int* MAP) {
+    for (int i = 0; i < 32; ++i) {
+        int squareX = mapRect[i][0];
+        int squareY = mapRect[i][1];
+        if (x >= squareX && x < squareX + 80 && y >= squareY && y < squareY + 80) {
+            //printf("%d %d\n", squareX, squareY);
+            return MAP[i];
+        }
+    }
+    return -1;
+}
+ 
+void square_event(int* MAP, int currentPlayer){
+    // 根據玩家位置行動
+    int squareType;
+    if (currentPlayer == 0) {
+        squareType = getSquareTypeFromPosition(player1.position[0], player1.position[1], MAP);
+    }else {
+        squareType = getSquareTypeFromPosition(player2.position[0], player2.position[1], MAP);
+    }
+    
+    //printf("return square: %d\n", squareType);
+    //int the_game = rand() % 6;;
+    switch (squareType) {
+        case SQUARE_normal:
+            // 玩家拿錢
+            printf("$$$\n");
+            break;
+        case SQUARE_chance:
+            // 進機會格的event
+            printf("event\n");
+            chance();
+            break;
+        case SQUARE_game:
+            // 用rand跑出0~5看要進什麼遊戲
+            /* switch (the_game){
+                case GAME_Minesweeper:
+                    //minigame_minesweeper();
+                    break;
+                case GAME_Dice_number:
+                    //minigame_Dice_number();
+                    break;
+                case GAME_Timer_Challenge:
+                    //minigame_Timer_Challenge();
+                    break;
+                case GAME_Flip_Card:
+                    //minigame_Flip_Card();
+                    break;    
+                case GAME_Coin_catcher:
+                    //minigame_Coin_catcher();
+                    break;
+                default:
+                    break;
+            }
+            */
+           printf("game\n");
+            break;
+        case SQUARE_store:
+            // 進商店
+            printf("store\n");
+            store();
+            break;
+        case SQUARE_ginger_soda:
+            // 進薑汁汽水販賣機
+            printf("sell ginger soda\n");
+            ginger_soda();
+            break;
+        default:
+            break;
+    }
+}
+
+void chance() {
+    newWindow = SDL_CreateWindow("Chance", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    newRenderer = SDL_CreateRenderer(newWindow, -1, SDL_RENDERER_ACCELERATED);
+}
+
+void store() {
+    newWindow = SDL_CreateWindow("Store", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    newRenderer = SDL_CreateRenderer(newWindow, -1, SDL_RENDERER_ACCELERATED);
+}
+
+void ginger_soda() {
+    newWindow = SDL_CreateWindow("Ginger Soda Store", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    newRenderer = SDL_CreateRenderer(newWindow, -1, SDL_RENDERER_ACCELERATED);
 }
 
 // 釋放資源

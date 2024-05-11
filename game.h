@@ -45,10 +45,16 @@ const int SCREEN_HEIGHT = 720;
 // 視窗
 SDL_Window* window;
 SDL_Window* bagWindow;
+SDL_Window* gingersodaWindow;
+SDL_Window* storeWindow;
+SDL_Window* newWindow;
 
 // Render
 SDL_Renderer* renderer;
 SDL_Renderer* bagRenderer;
+SDL_Renderer* gingersodaRenderer;
+SDL_Renderer* storeRenderer;
+SDL_Renderer* newRenderer;
 
 // 圖片
 SDL_Texture* startButtonTexture;
@@ -67,13 +73,13 @@ SDL_Rect backButtonRect = { 10, 5, 40, 40 };
 SDL_Rect titleRect = { 120, 120, 551,  444};
 SDL_Rect bagpackRect = {180, 120, 50, 50};
 SDL_Rect homepageRect = {120, 120, 50, 50};
-int mapPositions[28][2] = {
-        {640, 0}, {720, 0}, {800, 0}, {880, 0}, {960, 0}, {1040, 0}, {1120, 0},
-        {640, 640}, {720, 640}, {800, 640}, {880, 640}, {960, 640}, {1040, 640}, {1120, 640},
-        {560, 80}, {560, 160}, {560, 240}, {560, 320}, {560, 400}, {560, 480}, {560, 560},
-        {1200, 80}, {1200, 160}, {1200, 240}, {1200, 320}, {1200, 400}, {1200, 480}, {1200, 560} };
-int mapFixedPositions[4][2] = {
-    {560,0}, {1200,0}, {560,640}, {1200,640} };
+int mapRect[32][2] = {
+        {560,0}, {1200,0}, {560,640}, {1200,640},
+        {640, 0}, {720, 0}, {800, 0}, {880, 0}, {960, 0}, {1040, 0}, {1120, 0},                  // up
+        {640, 640}, {720, 640}, {800, 640}, {880, 640}, {960, 640}, {1040, 640}, {1120, 640},    // down
+        {560, 80}, {560, 160}, {560, 240}, {560, 320}, {560, 400}, {560, 480}, {560, 560},       // left
+        {1200, 80}, {1200, 160}, {1200, 240}, {1200, 320}, {1200, 400}, {1200, 480}, {1200, 560} // right
+};
 SDL_Rect diceRect = {880, 320, 80, 80};
 
 // 背景顏色
@@ -95,3 +101,8 @@ void render_map_and_player(int*);
 int close();
 int roll_dice();
 void updatePlayerPosition(int, int);
+Square_type getSquareTypeFromPosition(int, int, int*);
+void square_event(int*, int);
+void ginger_soda();
+void store();
+void chance();
