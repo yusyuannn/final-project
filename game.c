@@ -316,7 +316,7 @@ void square_event(int* MAP, int currentPlayer){
                     break;
             }
             */
-           printf("game\n");
+            printf("game\n");
             break;
         case SQUARE_store:
             // 進商店

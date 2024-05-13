@@ -4,9 +4,9 @@ CFLAGS = -Wall -Wextra -pedantic -std=c99 -Wno-strict-prototypes
 
 LDFLAGS = -lSDL2
 
-SOURCES = menu.c
+SOURCES = game.c
 
-TARGET = menu
+TARGET = game
 
 all: $(TARGET)
 
