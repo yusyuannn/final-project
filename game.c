@@ -5,10 +5,13 @@
 #include <SDL2/SDL.h>
 #include "game.h"
 
+// gcc -Isrc/Include -Lsrc/lib -o game game.c -lmingw32 -lSDL2main -lSDL2
 
-int main(){
+
+int main( int argc, char *argv[] ){
     const int numImages = 32;
-    int MAP[numImages];
+    // int MAP[numImages]; 
+    int MAP[32]; 
 
     if(!GAME_init(MAP, numImages)){
         printf("game initialization failed");
@@ -105,7 +108,7 @@ void initialize_map(int* imageOrder, int numImages){
     }
     for (int i = numImages - 1; i >= 4; --i) {
         //int j = rand() % (i + 1);
-        int j = 4 + rand() % (32 - 4);
+        int j = 4 + rand() % (32 - 4);      // random number btw 4 and 28
         int temp = imageOrder[i];
         imageOrder[i] = imageOrder[j];
         imageOrder[j] = temp;
@@ -123,7 +126,20 @@ void initialize_player(){
     player1.position[1] = 665;
     player2.position[0] = 1240;
     player2.position[1] = 665;
+    player1.money = 100;
+    player2.money = 100;
+    player1.ginger_soda = 0;
+    player2.ginger_soda = 0;
     currentPlayer = 0;
+}
+
+int mouse_is_above( int mouse_X, int mouse_Y, SDL_Rect rect ){
+    if( mouse_X >= rect.x && mouse_X < rect.x + rect.w &&
+        mouse_Y >= rect.y && mouse_Y < rect.y + rect.h ){
+            return 1;
+    }
+
+    return 0;
 }
 
 // 顯示畫面
@@ -135,32 +151,25 @@ void render_map_and_player(int* MAP){
     int currentScreen = MAIN_MENU;
     while (running && game_round) {
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
+            if (event.type == SDL_QUIT) {       // close window by the "X"
                 running = 0;
-            } else if (event.type == SDL_MOUSEBUTTONDOWN) {
+            } else if (event.type == SDL_MOUSEBUTTONDOWN) {     // pressed mouse
                 // 得到滑鼠位置
                 int mouseX, mouseY;
                 SDL_GetMouseState(&mouseX, &mouseY);
                 if (currentScreen == MAIN_MENU) {
-                    if (mouseX >= startButtonRect.x && mouseX < startButtonRect.x + startButtonRect.w &&
-                        mouseY >= startButtonRect.y && mouseY < startButtonRect.y + startButtonRect.h) {
+
+                    if (mouse_is_above(mouseX, mouseY, startButtonRect) ) {
                         currentScreen = GAME_SCREEN;
-                    } else if (mouseX >= quitButtonRect.x && mouseX < quitButtonRect.x + quitButtonRect.w &&
-                               mouseY >= quitButtonRect.y && mouseY < quitButtonRect.y + quitButtonRect.h) {
+                    } else if (mouse_is_above(mouseX, mouseY, quitButtonRect)) {
                         running = 0;
                     }
                 } else if (currentScreen == GAME_SCREEN) {
-                    if (mouseX >= homepageRect.x && mouseX < homepageRect.x + homepageRect.w &&
-                        mouseY >= homepageRect.y && mouseY < homepageRect.y + homepageRect.h &&
-                        event.button.button == SDL_BUTTON_LEFT) {
+                    if (mouse_is_above(mouseX, mouseY, homepageRect) && event.button.button == SDL_BUTTON_LEFT) {
                         currentScreen = MAIN_MENU;
-                    } else if (mouseX >= bagpackRect.x && mouseX < bagpackRect.x + bagpackRect.w &&
-                               mouseY >= bagpackRect.y && mouseY < bagpackRect.y + bagpackRect.h &&
-                               event.button.button == SDL_BUTTON_LEFT) {
+                    } else if (mouse_is_above(mouseX, mouseY, bagpackRect) && event.button.button == SDL_BUTTON_LEFT) {
                         //initBag(mouseX, mouseY);
-                    } else if (mouseX >= diceRect.x && mouseX < diceRect.x + diceRect.w &&
-                               mouseY >= diceRect.y && mouseY < diceRect.y + diceRect.h &&
-                               event.button.button == SDL_BUTTON_LEFT) {
+                    } else if (mouse_is_above(mouseX, mouseY, diceRect) && event.button.button == SDL_BUTTON_LEFT) {
                         int steps = roll_dice();
                         //printf("STEPS: %d\n", steps);
                         if (currentPlayer == 0) {
@@ -272,7 +281,7 @@ Square_type getSquareTypeFromPosition(int x, int y, int* MAP) {
     }
     return -1;
 }
- 
+
 void square_event(int* MAP, int currentPlayer){
     // 根據玩家位置行動
     int squareType;
@@ -287,7 +296,13 @@ void square_event(int* MAP, int currentPlayer){
     switch (squareType) {
         case SQUARE_normal:
             // 玩家拿錢
-            printf("$$$\n");
+            if (currentPlayer == 0) {
+                player1.money += 100;    // temperarily set to 100 for convenience
+                printf("player1 now has %d\n", player1.money);
+            }else {
+                player2.money += 100;
+                printf("player2 now has %d\n", player2.money);
+            }
             break;
         case SQUARE_chance:
             // 進機會格的event
