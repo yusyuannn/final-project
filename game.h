@@ -97,6 +97,7 @@ void initialize_menu();
 void initialize_texture();
 void initialize_map(int*, int);
 void initialize_player();
+int mouse_is_above( int, int, SDL_Rect);
 void render_map_and_player(int*);
 int close();
 int roll_dice();

@@ -9,8 +9,7 @@
 
 
 int main( int argc, char *argv[] ){
-    const int numImages = 32;
-    // int MAP[numImages]; 
+    const int numImages = 32; 
     int MAP[32]; 
 
     if(!GAME_init(MAP, numImages)){
