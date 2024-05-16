@@ -5,10 +5,13 @@
 #include <SDL2/SDL.h>
 #include "game.h"
 
+// gcc -Isrc/Include -Lsrc/lib -o game game.c -lmingw32 -lSDL2main -lSDL2
 
-int main(){
+
+int main( int argc, char *argv[] ){
     const int numImages = 32;
-    int MAP[numImages];
+    // int MAP[numImages]; 
+    int MAP[32]; 
 
     if(!GAME_init(MAP, numImages)){
         printf("game initialization failed");
@@ -105,7 +108,7 @@ void initialize_map(int* imageOrder, int numImages){
     }
     for (int i = numImages - 1; i >= 4; --i) {
         //int j = rand() % (i + 1);
-        int j = 4 + rand() % (32 - 4);
+        int j = 4 + rand() % (32 - 4);      // random number btw 4 and 28
         int temp = imageOrder[i];
         imageOrder[i] = imageOrder[j];
         imageOrder[j] = temp;
@@ -116,6 +119,7 @@ void initialize_map(int* imageOrder, int numImages){
     printf("\n"); */
 }
 
+// 初始化玩家
 void initialize_player(){
     player1.name = "Player1";
     player2.name = "Player2";
@@ -123,7 +127,21 @@ void initialize_player(){
     player1.position[1] = 665;
     player2.position[0] = 1240;
     player2.position[1] = 665;
+    player1.money = 100;
+    player2.money = 100;
+    player1.ginger_soda = 0;
+    player2.ginger_soda = 0;
     currentPlayer = 0;
+}
+
+// 檢查滑鼠點擊位置
+int mouse_is_above( int mouse_X, int mouse_Y, SDL_Rect rect ){
+    if( mouse_X >= rect.x && mouse_X < rect.x + rect.w &&
+        mouse_Y >= rect.y && mouse_Y < rect.y + rect.h ){
+            return 1;
+    }
+
+    return 0;
 }
 
 // 顯示畫面
@@ -133,52 +151,50 @@ void render_map_and_player(int* MAP){
     int running = 1;
     float game_round = 20; // 行動回數
     int currentScreen = MAIN_MENU;
+    int diceClicked = 0; // Flag to indicate if dice is clicked
+    
     while (running && game_round) {
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
+            if (event.type == SDL_QUIT) {       // close window by the "X"
                 running = 0;
-            } else if (event.type == SDL_MOUSEBUTTONDOWN) {
+            } else if (event.type == SDL_MOUSEBUTTONDOWN) {     // pressed mouse
                 // 得到滑鼠位置
                 int mouseX, mouseY;
                 SDL_GetMouseState(&mouseX, &mouseY);
                 if (currentScreen == MAIN_MENU) {
-                    if (mouseX >= startButtonRect.x && mouseX < startButtonRect.x + startButtonRect.w &&
-                        mouseY >= startButtonRect.y && mouseY < startButtonRect.y + startButtonRect.h) {
+                    if (mouse_is_above(mouseX, mouseY, startButtonRect) ) {
                         currentScreen = GAME_SCREEN;
-                    } else if (mouseX >= quitButtonRect.x && mouseX < quitButtonRect.x + quitButtonRect.w &&
-                               mouseY >= quitButtonRect.y && mouseY < quitButtonRect.y + quitButtonRect.h) {
+                    } else if (mouse_is_above(mouseX, mouseY, quitButtonRect)) {
                         running = 0;
                     }
                 } else if (currentScreen == GAME_SCREEN) {
-                    if (mouseX >= homepageRect.x && mouseX < homepageRect.x + homepageRect.w &&
-                        mouseY >= homepageRect.y && mouseY < homepageRect.y + homepageRect.h &&
-                        event.button.button == SDL_BUTTON_LEFT) {
+                    if (mouse_is_above(mouseX, mouseY, homepageRect) && event.button.button == SDL_BUTTON_LEFT) {
                         currentScreen = MAIN_MENU;
-                    } else if (mouseX >= bagpackRect.x && mouseX < bagpackRect.x + bagpackRect.w &&
-                               mouseY >= bagpackRect.y && mouseY < bagpackRect.y + bagpackRect.h &&
-                               event.button.button == SDL_BUTTON_LEFT) {
+                    } else if (mouse_is_above(mouseX, mouseY, bagpackRect) && event.button.button == SDL_BUTTON_LEFT) {
                         //initBag(mouseX, mouseY);
-                    } else if (mouseX >= diceRect.x && mouseX < diceRect.x + diceRect.w &&
-                               mouseY >= diceRect.y && mouseY < diceRect.y + diceRect.h &&
-                               event.button.button == SDL_BUTTON_LEFT) {
+                    } else if (mouse_is_above(mouseX, mouseY, diceRect) && event.button.button == SDL_BUTTON_LEFT) {
                         int steps = roll_dice();
-                        //printf("STEPS: %d\n", steps);
-                        if (currentPlayer == 0) {
-                            updatePlayerPosition(steps, currentPlayer); // 更新玩家1位置
-                            square_event(MAP, currentPlayer);
-                            //game_round -= 0.5;
-                        } else {
-                            updatePlayerPosition(steps, currentPlayer); // 更新玩家2位置
-                            square_event(MAP, currentPlayer);
-                            //game_round -= 0.5;
+                        updatePlayerPosition(steps, currentPlayer); // 更新玩家位置
+                        // 顯示改變後的玩家位置和地圖
+                        SDL_RenderClear(renderer);
+                        for (int i = 0; i < 32; i++) {
+                            SDL_Rect rect = {mapRect[i][0], mapRect[i][1], 80, 80};
+                            int randomIndex = MAP[i];
+                            SDL_RenderCopy(renderer, square[randomIndex], NULL, &rect);
                         }
-                        currentPlayer = (currentPlayer + 1) % player_num;
+                        SDL_Rect rect1 = {player1.position[0], player1.position[1], 30, 30};
+                        SDL_RenderCopy(renderer, player[0], NULL, &rect1);
+                        SDL_Rect rect2 = {player2.position[0], player2.position[1], 30, 30};
+                        SDL_RenderCopy(renderer, player[1], NULL, &rect2);
+                        SDL_RenderPresent(renderer);
+
+                        square_event(MAP, currentPlayer);
+
+                        currentPlayer = (currentPlayer + 1) % player_num;  // 交換玩家 
                     }
                 }
-            } else if (event.type == SDL_WINDOWEVENT && newWindow != NULL) {
-                // 處理新視窗的事件
-                if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(newWindow)) {
-                    // 如果新視窗關閉了，則銷毀它
+            } else if (event.type == SDL_WINDOWEVENT && newWindow != NULL) {  // 處理新視窗的事件
+                if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(newWindow)) {  // 如果新視窗關閉了，則銷毀它
                     SDL_DestroyRenderer(newRenderer);
                     SDL_DestroyWindow(newWindow);
                     newRenderer = NULL;
@@ -208,6 +224,8 @@ void render_map_and_player(int* MAP){
             // 顯示返回主頁按鈕
             SDL_RenderCopy(renderer, homepageTexture, NULL, &homepageRect);
             //SDL_RenderCopy(renderer, bagpackTexture, NULL, &bagpackRect);
+        } else if (currentScreen == GAME_SCREEN && diceClicked == 1) {
+            
         }
         SDL_RenderPresent(renderer);
     }
@@ -267,19 +285,22 @@ Square_type getSquareTypeFromPosition(int x, int y, int* MAP) {
         int squareY = mapRect[i][1];
         if (x >= squareX && x < squareX + 80 && y >= squareY && y < squareY + 80) {
             //printf("%d %d\n", squareX, squareY);
-            return MAP[i];
+            return i;
         }
     }
     return -1;
 }
- 
+
 void square_event(int* MAP, int currentPlayer){
     // 根據玩家位置行動
     int squareType;
+    int index;
     if (currentPlayer == 0) {
-        squareType = getSquareTypeFromPosition(player1.position[0], player1.position[1], MAP);
+        index = getSquareTypeFromPosition(player1.position[0], player1.position[1], MAP);
+        squareType = MAP[index];
     }else {
-        squareType = getSquareTypeFromPosition(player2.position[0], player2.position[1], MAP);
+        index = getSquareTypeFromPosition(player2.position[0], player2.position[1], MAP);
+        squareType = MAP[index];
     }
     
     //printf("return square: %d\n", squareType);
@@ -287,7 +308,13 @@ void square_event(int* MAP, int currentPlayer){
     switch (squareType) {
         case SQUARE_normal:
             // 玩家拿錢
-            printf("$$$\n");
+            if (currentPlayer == 0) {
+                player1.money += 100;    // temperarily set to 100 for convenience
+                printf("player1 now has %d\n", player1.money);
+            }else {
+                player2.money += 100;
+                printf("player2 now has %d\n", player2.money);
+            }
             break;
         case SQUARE_chance:
             // 進機會格的event
@@ -327,6 +354,10 @@ void square_event(int* MAP, int currentPlayer){
             // 進薑汁汽水販賣機
             printf("sell ginger soda\n");
             ginger_soda();
+            int randomSquare = 4 + rand() % (32 - 4);      // random number btw 4 and 28
+            int temp = MAP[randomSquare];
+            MAP[randomSquare] = MAP[index];
+            MAP[index] = temp;
             break;
         default:
             break;
@@ -334,18 +365,51 @@ void square_event(int* MAP, int currentPlayer){
 }
 
 void chance() {
+    // 檢查上一次開啟的新視窗是否有關閉
+    if (newWindow != NULL) {
+        SDL_DestroyRenderer(newRenderer);
+        SDL_DestroyWindow(newWindow);
+        newRenderer = NULL;
+        newWindow = NULL;
+    }
+    //SDL_Delay(1000);  // 延遲1秒
     newWindow = SDL_CreateWindow("Chance", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     newRenderer = SDL_CreateRenderer(newWindow, -1, SDL_RENDERER_ACCELERATED);
+    SDL_SetRenderDrawColor(newRenderer, 255, 255, 255, 255);
+    SDL_RenderClear(newRenderer); 
+    SDL_RenderPresent(newRenderer);
 }
 
 void store() {
+    // 檢查上一次開啟的新視窗是否有關閉
+    if (newWindow != NULL) {
+        SDL_DestroyRenderer(newRenderer);
+        SDL_DestroyWindow(newWindow);
+        newRenderer = NULL;
+        newWindow = NULL;
+    }
+    //SDL_Delay(1000);  // 延遲1秒
     newWindow = SDL_CreateWindow("Store", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     newRenderer = SDL_CreateRenderer(newWindow, -1, SDL_RENDERER_ACCELERATED);
+    SDL_SetRenderDrawColor(newRenderer, 255, 255, 255, 255);
+    SDL_RenderClear(newRenderer); 
+    SDL_RenderPresent(newRenderer);
 }
 
 void ginger_soda() {
+    // 檢查上一次開啟的新視窗是否有關閉
+    if (newWindow != NULL) {
+        SDL_DestroyRenderer(newRenderer);
+        SDL_DestroyWindow(newWindow);
+        newRenderer = NULL;
+        newWindow = NULL;
+    }
+    //SDL_Delay(1000);  // 延遲1秒
     newWindow = SDL_CreateWindow("Ginger Soda Store", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     newRenderer = SDL_CreateRenderer(newWindow, -1, SDL_RENDERER_ACCELERATED);
+    SDL_SetRenderDrawColor(newRenderer, 255, 255, 255, 255);
+    SDL_RenderClear(newRenderer); 
+    SDL_RenderPresent(newRenderer);
 }
 
 // 釋放資源
