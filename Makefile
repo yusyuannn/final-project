@@ -13,6 +13,5 @@ all: $(TARGET)
 $(TARGET): $(SOURCES)
 	$(CC) $(CFLAGS) -o $(TARGET) $(SOURCES) $(LDFLAGS)
 
-
 clean:
 	rm -f $(TARGET)

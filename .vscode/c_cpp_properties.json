@@ -3,8 +3,7 @@
         {
             "name": "macos-clang-x64",
             "includePath": [
-                "${workspaceFolder}/**",
-                "/usr/local/Cellar/sdl2_ttf/2.22.0"
+                "${workspaceFolder}/**"
             ],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "${default}",
