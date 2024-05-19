@@ -29,7 +29,8 @@ typedef enum {
 
 typedef enum {
     MAIN_MENU,
-    GAME_SCREEN
+    GAME_SCREEN,
+    BAGPACK_SCREEN
 } Screen;
 
 typedef enum {
@@ -57,20 +58,33 @@ SDL_Renderer* storeRenderer;
 SDL_Renderer* newRenderer;
 
 // 圖片
+// MAIN_MENU 
 SDL_Texture* startButtonTexture;
 SDL_Texture* quitButtonTexture;
 SDL_Texture* titleTexture;
+// GAME_SCREEN
 SDL_Texture* bagpackTexture;
 SDL_Texture* homepageTexture;
 SDL_Texture* square[6];
 SDL_Texture* player[player_num];
 SDL_Texture* diceTexture;
+// BAGPACK_SCREEN
+SDL_Texture* player1TitleTexture;
+SDL_Texture* player2TitleTexture;
+SDL_Texture* toolIllustreTexture; 
+SDL_Texture* returnButtonTexture; 
+SDL_Texture* moneyTexture; 
+SDL_Texture* moneyPrintTexture; 
+SDL_Texture* gindersodaTexture; 
+SDL_Texture* gingersodaPrintTexture;
 
 // 位置
+// MAIN_MENU 
 SDL_Rect startButtonRect = { 760, 200, 335, 135 };
 SDL_Rect quitButtonRect = { 780, 400, 284, 120 };
 SDL_Rect backButtonRect = { 10, 5, 40, 40 };
 SDL_Rect titleRect = { 120, 120, 551,  444};
+// GAME_SCREEN
 SDL_Rect bagpackRect = {180, 120, 50, 50};
 SDL_Rect homepageRect = {120, 120, 50, 50};
 int mapRect[32][2] = {
@@ -81,6 +95,15 @@ int mapRect[32][2] = {
         {1200, 80}, {1200, 160}, {1200, 240}, {1200, 320}, {1200, 400}, {1200, 480}, {1200, 560} // right
 };
 SDL_Rect diceRect = {880, 320, 80, 80};
+// BAGPACK_SCREEN
+SDL_Rect playerTitleRect = {250, 100, 200, 50};
+SDL_Rect toolIllustreRect = {100, 450, 500, 200};
+SDL_Rect returnButtonRect = {700, 100, 350, 50};
+SDL_Rect moneyRect = {700, 200, 200, 200};
+SDL_Rect moneyPrintRect = {950, 250, 100, 100};
+SDL_Rect gindersodaRect = {700, 450, 200, 200};
+SDL_Rect gingersodaPrintRect = {950, 500, 100, 100};
+
 
 // 背景顏色
 SDL_Color menuBackgrounColor = {254,252,251,0xFF};
