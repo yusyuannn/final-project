@@ -7,7 +7,6 @@
 
 // gcc -Isrc/Include -Lsrc/lib -o game game.c -lmingw32 -lSDL2main -lSDL2
 
-
 int main( int argc, char *argv[] ){
     const int numImages = 32; 
     int MAP[32]; 
@@ -47,9 +46,11 @@ void initialize_menu(){
 
 // 載入圖片為texture
 void initialize_texture(){  
+    // MAIN_MENU    
     SDL_Surface* startButtonSurface = SDL_LoadBMP("images/start_button.bmp");
     SDL_Surface* quitButtonSurface = SDL_LoadBMP("images/quit_button.bmp");
     SDL_Surface* titleSurface = SDL_LoadBMP("images/title.bmp");
+    // GAME_SCREEN   
     SDL_Surface* bagpackSurface = SDL_LoadBMP("images/bagpack.bmp");
     SDL_Surface* homepageSurface = SDL_LoadBMP("images/homepage.bmp");
     SDL_Surface* gameTileSurface = SDL_LoadBMP("images/gameTile.bmp");
@@ -61,9 +62,21 @@ void initialize_texture(){
     SDL_Surface* player1Surface = SDL_LoadBMP("images/black_circle.bmp");
     SDL_Surface* player2Surface = SDL_LoadBMP("images/white_circle.bmp");
     SDL_Surface* initDiceSurface = SDL_LoadBMP("images/init_dice.bmp");
+    // BAGPACK_SCREEN
+    SDL_Surface* player1TitleSurface = SDL_LoadBMP("images/Player1.bmp");
+    SDL_Surface* player2TitleSurface = SDL_LoadBMP("images/Player2.bmp");
+    SDL_Surface* toolIllustreSurface = SDL_LoadBMP("images/toolIilustration.bmp");
+    SDL_Surface* returnButtonSurface = SDL_LoadBMP("images/ReturnMap.bmp");
+    SDL_Surface* moneySurface = SDL_LoadBMP("images/money.bmp");
+    SDL_Surface* moneyPrintSurface = SDL_LoadBMP("images/print.bmp");
+    SDL_Surface* gindersodaSurface = SDL_LoadBMP("images/money.bmp");
+    SDL_Surface* gingersodaPrintSurface = SDL_LoadBMP("images/print.bmp");
+
+    // MAIN_MENU
     startButtonTexture = SDL_CreateTextureFromSurface(renderer, startButtonSurface);
     quitButtonTexture = SDL_CreateTextureFromSurface(renderer, quitButtonSurface);
     titleTexture = SDL_CreateTextureFromSurface(renderer, titleSurface);
+    // GAME_SCREEN 
     bagpackTexture = SDL_CreateTextureFromSurface(renderer, bagpackSurface);
     homepageTexture = SDL_CreateTextureFromSurface(renderer, homepageSurface);
     square[SQUARE_normal] = SDL_CreateTextureFromSurface(renderer, normalTileSurface);
@@ -75,9 +88,21 @@ void initialize_texture(){
     player[0] = SDL_CreateTextureFromSurface(renderer, player1Surface);
     player[1] = SDL_CreateTextureFromSurface(renderer, player2Surface);
     diceTexture = SDL_CreateTextureFromSurface(renderer, initDiceSurface);
+    // BAGPACK_SCREEN
+    player1TitleTexture = SDL_CreateTextureFromSurface(renderer, player1TitleSurface);
+    player2TitleTexture = SDL_CreateTextureFromSurface(renderer, player2TitleSurface);
+    toolIllustreTexture = SDL_CreateTextureFromSurface(renderer, toolIllustreSurface);
+    returnButtonTexture = SDL_CreateTextureFromSurface(renderer, returnButtonSurface);
+    moneyTexture = SDL_CreateTextureFromSurface(renderer, moneySurface);
+    moneyPrintTexture = SDL_CreateTextureFromSurface(renderer, moneyPrintSurface);
+    gindersodaTexture = SDL_CreateTextureFromSurface(renderer, gindersodaSurface);
+    gingersodaPrintTexture = SDL_CreateTextureFromSurface(renderer, gingersodaPrintSurface);
+    
+    // MAIN_MENU  
     SDL_FreeSurface(startButtonSurface);
     SDL_FreeSurface(quitButtonSurface);
     SDL_FreeSurface(titleSurface);
+    // GAME_SCREEN 
     SDL_FreeSurface(bagpackSurface);
     SDL_FreeSurface(gameTileSurface);
     SDL_FreeSurface(chanceTileSurface);
@@ -88,6 +113,15 @@ void initialize_texture(){
     SDL_FreeSurface(player1Surface);
     SDL_FreeSurface(player2Surface);
     SDL_FreeSurface(initDiceSurface);
+    // BAGPACK_SCREEN
+    SDL_FreeSurface(player1TitleSurface);
+    SDL_FreeSurface(player2TitleSurface);
+    SDL_FreeSurface(toolIllustreSurface);
+    SDL_FreeSurface(returnButtonSurface);
+    SDL_FreeSurface(moneySurface);
+    SDL_FreeSurface(moneyPrintSurface);
+    SDL_FreeSurface(gindersodaSurface);
+    SDL_FreeSurface(gingersodaPrintSurface);
 }
 
 // 初始化地圖
@@ -170,7 +204,7 @@ void render_map_and_player(int* MAP){
                     if (mouse_is_above(mouseX, mouseY, homepageRect) && event.button.button == SDL_BUTTON_LEFT) {
                         currentScreen = MAIN_MENU;
                     } else if (mouse_is_above(mouseX, mouseY, bagpackRect) && event.button.button == SDL_BUTTON_LEFT) {
-                        //initBag(mouseX, mouseY);
+                        currentScreen = BAGPACK_SCREEN;
                     } else if (mouse_is_above(mouseX, mouseY, diceRect) && event.button.button == SDL_BUTTON_LEFT) {
                         int steps = roll_dice();
                         updatePlayerPosition(steps, currentPlayer); // 更新玩家位置
@@ -190,6 +224,10 @@ void render_map_and_player(int* MAP){
                         square_event(MAP, currentPlayer);
 
                         currentPlayer = (currentPlayer + 1) % player_num;  // 交換玩家 
+                    }
+                } else if (currentScreen == BAGPACK_SCREEN) {
+                    if (mouse_is_above(mouseX, mouseY, returnButtonRect) && event.button.button == SDL_BUTTON_LEFT) {
+                        currentScreen = GAME_SCREEN;
                     }
                 }
             } else if (event.type == SDL_WINDOWEVENT && newWindow != NULL) {  // 處理新視窗的事件
@@ -222,10 +260,20 @@ void render_map_and_player(int* MAP){
             SDL_RenderCopy(renderer, diceTexture, NULL, &diceRect);
             // 顯示返回主頁按鈕
             SDL_RenderCopy(renderer, homepageTexture, NULL, &homepageRect);
-            //SDL_RenderCopy(renderer, bagpackTexture, NULL, &bagpackRect);
+            SDL_RenderCopy(renderer, bagpackTexture, NULL, &bagpackRect);
         } else if (currentScreen == GAME_SCREEN && diceClicked == 1) {
             
-        }
+        } else if (currentScreen == BAGPACK_SCREEN) {
+            // 顯示背包
+            SDL_RenderCopy(renderer, player1TitleTexture, NULL, &playerTitleRect);
+            SDL_RenderCopy(renderer, toolIllustreTexture, NULL, &toolIllustreRect);
+            SDL_RenderCopy(renderer, returnButtonTexture, NULL, &returnButtonRect);
+
+            SDL_RenderCopy(renderer, moneyTexture, NULL, &moneyRect);
+            SDL_RenderCopy(renderer, moneyPrintTexture, NULL, &moneyPrintRect);
+            SDL_RenderCopy(renderer, gindersodaTexture, NULL, &gindersodaRect);
+            SDL_RenderCopy(renderer, gingersodaPrintTexture, NULL, &gingersodaPrintRect);
+            }
         SDL_RenderPresent(renderer);
     }
 }
