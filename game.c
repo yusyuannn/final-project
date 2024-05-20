@@ -61,7 +61,6 @@ void initialize_texture(){
     SDL_Surface* storeTileSurface = SDL_LoadBMP("images/storeTile.bmp");
     SDL_Surface* player1Surface = SDL_LoadBMP("images/black_circle.bmp");
     SDL_Surface* player2Surface = SDL_LoadBMP("images/white_circle.bmp");
-    SDL_Surface* initDiceSurface = SDL_LoadBMP("images/init_dice.bmp");
     // BAGPACK_SCREEN
     SDL_Surface* player1TitleSurface = SDL_LoadBMP("images/Player1.bmp");
     SDL_Surface* player2TitleSurface = SDL_LoadBMP("images/Player2.bmp");
@@ -87,7 +86,6 @@ void initialize_texture(){
     square[SQUARE_start] = SDL_CreateTextureFromSurface(renderer, startTileSurface);
     player[0] = SDL_CreateTextureFromSurface(renderer, player1Surface);
     player[1] = SDL_CreateTextureFromSurface(renderer, player2Surface);
-    diceTexture = SDL_CreateTextureFromSurface(renderer, initDiceSurface);
     // BAGPACK_SCREEN
     player1TitleTexture = SDL_CreateTextureFromSurface(renderer, player1TitleSurface);
     player2TitleTexture = SDL_CreateTextureFromSurface(renderer, player2TitleSurface);
@@ -112,7 +110,6 @@ void initialize_texture(){
     SDL_FreeSurface(storeTileSurface);
     SDL_FreeSurface(player1Surface);
     SDL_FreeSurface(player2Surface);
-    SDL_FreeSurface(initDiceSurface);
     // BAGPACK_SCREEN
     SDL_FreeSurface(player1TitleSurface);
     SDL_FreeSurface(player2TitleSurface);
@@ -122,6 +119,15 @@ void initialize_texture(){
     SDL_FreeSurface(moneyPrintSurface);
     SDL_FreeSurface(gindersodaSurface);
     SDL_FreeSurface(gingersodaPrintSurface);
+    
+    // DICE
+    for (int i = 0; i < 6; ++i) {
+        char filename[20];
+        snprintf(filename, sizeof(filename), "images/dice_%d.bmp", i + 1);
+        SDL_Surface* surface = SDL_LoadBMP(filename);
+        diceTextures[i] = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_FreeSurface(surface);
+    }
 }
 
 // 初始化地圖
@@ -140,16 +146,11 @@ void initialize_map(int* imageOrder, int numImages){
         }
     }
     for (int i = numImages - 1; i >= 4; --i) {
-        //int j = rand() % (i + 1);
         int j = 4 + rand() % (32 - 4);      // random number btw 4 and 28
         int temp = imageOrder[i];
         imageOrder[i] = imageOrder[j];
         imageOrder[j] = temp;
     }
-    /* for (int i =0; i < 32; i++) {
-        printf("%d ", imageOrder[i]);
-    }
-    printf("\n"); */
 }
 
 // 初始化玩家
@@ -179,19 +180,17 @@ int mouse_is_above( int mouse_X, int mouse_Y, SDL_Rect rect ){
 
 // 顯示畫面
 void render_map_and_player(int* MAP){
-    // 用SDL render東西這樣
     SDL_Event event;
     int running = 1;
     float game_round = 20; // 行動回數
     int currentScreen = MAIN_MENU;
-    int diceClicked = 0; // Flag to indicate if dice is clicked
-    
+    int steps = 1;
+
     while (running && game_round) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {       // close window by the "X"
                 running = 0;
             } else if (event.type == SDL_MOUSEBUTTONDOWN) {     // pressed mouse
-                // 得到滑鼠位置
                 int mouseX, mouseY;
                 SDL_GetMouseState(&mouseX, &mouseY);
                 if (currentScreen == MAIN_MENU) {
@@ -206,24 +205,11 @@ void render_map_and_player(int* MAP){
                     } else if (mouse_is_above(mouseX, mouseY, bagpackRect) && event.button.button == SDL_BUTTON_LEFT) {
                         currentScreen = BAGPACK_SCREEN;
                     } else if (mouse_is_above(mouseX, mouseY, diceRect) && event.button.button == SDL_BUTTON_LEFT) {
-                        int steps = roll_dice();
-                        updatePlayerPosition(steps, currentPlayer); // 更新玩家位置
-                        // 顯示改變後的玩家位置和地圖
-                        SDL_RenderClear(renderer);
-                        for (int i = 0; i < 32; i++) {
-                            SDL_Rect rect = {mapRect[i][0], mapRect[i][1], 80, 80};
-                            int randomIndex = MAP[i];
-                            SDL_RenderCopy(renderer, square[randomIndex], NULL, &rect);
-                        }
-                        SDL_Rect rect1 = {player1.position[0], player1.position[1], 30, 30};
-                        SDL_RenderCopy(renderer, player[0], NULL, &rect1);
-                        SDL_Rect rect2 = {player2.position[0], player2.position[1], 30, 30};
-                        SDL_RenderCopy(renderer, player[1], NULL, &rect2);
-                        SDL_RenderPresent(renderer);
-
-                        square_event(MAP, currentPlayer);
-
-                        currentPlayer = (currentPlayer + 1) % player_num;  // 交換玩家 
+                        steps = roll_dice();
+                        renderDiceAnimation(steps, MAP);                   
+                        updatePlayerPosition(steps, currentPlayer, MAP);   
+                        square_event(MAP, currentPlayer);                  
+                        currentPlayer = (currentPlayer + 1) % player_num;  
                     }
                 } else if (currentScreen == BAGPACK_SCREEN) {
                     if (mouse_is_above(mouseX, mouseY, returnButtonRect) && event.button.button == SDL_BUTTON_LEFT) {
@@ -231,7 +217,7 @@ void render_map_and_player(int* MAP){
                     }
                 }
             } else if (event.type == SDL_WINDOWEVENT && newWindow != NULL) {  // 處理新視窗的事件
-                if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(newWindow)) {  // 如果新視窗關閉了，則銷毀它
+                if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(newWindow)) {  // 關閉新視窗
                     SDL_DestroyRenderer(newRenderer);
                     SDL_DestroyWindow(newWindow);
                     newRenderer = NULL;
@@ -241,28 +227,9 @@ void render_map_and_player(int* MAP){
         }
         SDL_RenderClear(renderer);
         if (currentScreen == MAIN_MENU) {
-            SDL_RenderCopy(renderer, startButtonTexture, NULL, &startButtonRect);
-            SDL_RenderCopy(renderer, quitButtonTexture, NULL, &quitButtonRect);
-            SDL_RenderCopy(renderer, titleTexture, NULL, &titleRect);
+            renderMenu();
         } else if (currentScreen == GAME_SCREEN) {
-            // 顯示地圖
-            for (int i = 0; i < 32; i++) {
-                SDL_Rect rect = {mapRect[i][0], mapRect[i][1], 80, 80};
-                int randomIndex = MAP[i];
-                SDL_RenderCopy(renderer, square[randomIndex], NULL, &rect);
-            }
-            // 顯示玩家
-            SDL_Rect rect1 = {player1.position[0], player1.position[1], 30, 30};
-            SDL_RenderCopy(renderer, player[0], NULL, &rect1);
-            SDL_Rect rect2 = {player2.position[0], player2.position[1], 30, 30};
-            SDL_RenderCopy(renderer, player[1], NULL, &rect2);
-            // 顯示骰子
-            SDL_RenderCopy(renderer, diceTexture, NULL, &diceRect);
-            // 顯示返回主頁按鈕
-            SDL_RenderCopy(renderer, homepageTexture, NULL, &homepageRect);
-            SDL_RenderCopy(renderer, bagpackTexture, NULL, &bagpackRect);
-        } else if (currentScreen == GAME_SCREEN && diceClicked == 1) {
-            
+            renderGameScreen(MAP, steps);
         } else if (currentScreen == BAGPACK_SCREEN) {
             // 顯示背包
             SDL_RenderCopy(renderer, player1TitleTexture, NULL, &playerTitleRect);
@@ -278,11 +245,55 @@ void render_map_and_player(int* MAP){
     }
 }
 
+void renderMenu() {
+    SDL_RenderCopy(renderer, startButtonTexture, NULL, &startButtonRect);
+    SDL_RenderCopy(renderer, quitButtonTexture, NULL, &quitButtonRect);
+    SDL_RenderCopy(renderer, titleTexture, NULL, &titleRect);
+}
+
+void renderGameScreen(int* MAP, int steps) {
+    // 地圖
+    for (int i = 0; i < 32; i++) {
+        SDL_Rect rect = {mapRect[i][0], mapRect[i][1], 80, 80};
+        int randomIndex = MAP[i];
+        SDL_RenderCopy(renderer, square[randomIndex], NULL, &rect);
+    }
+    // 玩家
+    SDL_Rect rect1 = {player1.position[0], player1.position[1], 30, 30};
+    SDL_RenderCopy(renderer, player[0], NULL, &rect1);
+    SDL_Rect rect2 = {player2.position[0], player2.position[1], 30, 30};
+    SDL_RenderCopy(renderer, player[1], NULL, &rect2);
+    // 骰子
+    SDL_RenderCopy(renderer, diceTextures[steps - 1], NULL, &diceRect);
+    // 返回主頁
+    SDL_RenderCopy(renderer, homepageTexture, NULL, &homepageRect);
+    // 背包
+    SDL_RenderCopy(renderer, bagpackTexture, NULL, &bagpackRect);
+}
+
+void renderDiceAnimation(int finalRoll, int* MAP) {
+    Uint32 startTime = SDL_GetTicks();
+    Uint32 animation_duration = 500;      // 0.5 second
+    Uint32 animation_frame_duration = 50; // 50 ms per frame
+    int frame = 0;
+    while (SDL_GetTicks() - startTime < animation_duration) {
+        frame = (frame + 1) % 6;
+        SDL_RenderClear(renderer);
+        renderGameScreen(MAP, finalRoll);
+        SDL_RenderCopy(renderer, diceTextures[frame], NULL, &diceRect);
+        SDL_RenderPresent(renderer);
+        SDL_Delay(animation_frame_duration);
+    }
+}
+
+// 擲骰子
 int roll_dice(){
     return rand() % 6 + 1;
 }
 
-void updatePlayerPosition(int steps, int currentPlayer) {
+// 根據骰子點數移動玩家位置
+void updatePlayerPosition(int steps, int currentPlayer, int* MAP) {
+    int finalRoll = steps;
     if (currentPlayer == 0) {
         while (steps){
             if ((player1.position[0]==1210 && player1.position[1]==665) || 
@@ -300,7 +311,11 @@ void updatePlayerPosition(int steps, int currentPlayer) {
             } else if (dir[0] == RIGHT) {
                 player1.position[0] += 80;
             }
-            //printf("Player1's position: %d %d\n", player1.position[0], player1.position[1]);
+            // 顯示當前移動情況
+            SDL_RenderClear(renderer);
+            renderGameScreen(MAP, finalRoll);
+            SDL_RenderPresent(renderer);
+            SDL_Delay(500);
             steps--;
         }
     } else {
@@ -320,37 +335,28 @@ void updatePlayerPosition(int steps, int currentPlayer) {
             } else if (dir[1] == RIGHT) {
                 player2.position[0] += 80;
             }
-            //printf("Player2's position: %d %d\n", player2.position[0], player2.position[1]);
+            // 顯示當前移動情況
+            SDL_RenderClear(renderer);
+            renderGameScreen(MAP, finalRoll);
+            SDL_RenderPresent(renderer);
+            SDL_Delay(500);
             steps--;
         }
     }
 }
 
-Square_type getSquareTypeFromPosition(int x, int y, int* MAP) {
-    for (int i = 0; i < 32; ++i) {
-        int squareX = mapRect[i][0];
-        int squareY = mapRect[i][1];
-        if (x >= squareX && x < squareX + 80 && y >= squareY && y < squareY + 80) {
-            //printf("%d %d\n", squareX, squareY);
-            return i;
-        }
-    }
-    return -1;
-}
-
+// 根據玩家位置行動
 void square_event(int* MAP, int currentPlayer){
-    // 根據玩家位置行動
     int squareType;
     int index;
     if (currentPlayer == 0) {
-        index = getSquareTypeFromPosition(player1.position[0], player1.position[1], MAP);
+        index = getSquareTypeFromPosition(player1.position[0], player1.position[1]);
         squareType = MAP[index];
     }else {
-        index = getSquareTypeFromPosition(player2.position[0], player2.position[1], MAP);
+        index = getSquareTypeFromPosition(player2.position[0], player2.position[1]);
         squareType = MAP[index];
     }
-    
-    //printf("return square: %d\n", squareType);
+
     //int the_game = rand() % 6;;
     switch (squareType) {
         case SQUARE_normal:
@@ -401,6 +407,7 @@ void square_event(int* MAP, int currentPlayer){
             // 進薑汁汽水販賣機
             printf("sell ginger soda\n");
             ginger_soda();
+            // 汽水格和地圖上隨機一格交換位置
             int randomSquare = 4 + rand() % (32 - 4);      // random number btw 4 and 28
             int temp = MAP[randomSquare];
             MAP[randomSquare] = MAP[index];
@@ -409,6 +416,18 @@ void square_event(int* MAP, int currentPlayer){
         default:
             break;
     }
+}
+
+// 從格子位置得知格子類型
+Square_type getSquareTypeFromPosition(int x, int y) {
+    for (int i = 0; i < 32; ++i) {
+        int squareX = mapRect[i][0];
+        int squareY = mapRect[i][1];
+        if (x >= squareX && x < squareX + 80 && y >= squareY && y < squareY + 80) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 void chance() {
