@@ -2,7 +2,7 @@ CC = gcc
 
 CFLAGS = -Wall -Wextra -pedantic -std=c99 -Wno-strict-prototypes
 
-LDFLAGS = -lSDL2
+LDFLAGS = -lSDL2 -lSDL2_ttf
 
 SOURCES = game.c
 

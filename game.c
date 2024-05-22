@@ -1,15 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-//#include <SDL2_ttf.h>
+#include <string.h>
+#include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL.h>
 #include "game.h"
 
 // gcc -Isrc/Include -Lsrc/lib -o game game.c -lmingw32 -lSDL2main -lSDL2
 
+int game_round = 20;
+
+SDL_Texture* renderText(const char* message, SDL_Color color) {
+    SDL_Surface* surface = TTF_RenderText_Solid(font, message, color);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    return texture;
+}
+
 int main( int argc, char *argv[] ){
     const int numImages = 32; 
-    int MAP[32]; 
+    int MAP[32];
 
     if(!GAME_init(MAP, numImages)){
         printf("game initialization failed");
@@ -21,6 +31,10 @@ int main( int argc, char *argv[] ){
 }
 
 int GAME_init(int* MAP, int numImages){
+    SDL_Init(SDL_INIT_VIDEO);
+    TTF_Init();
+    font = TTF_OpenFont("fonts/Cubic_11_1.100_R.ttf", 24);  // 可替換字體
+    
     initialize_menu();
     initialize_texture();
     initialize_map(MAP, numImages);
@@ -38,7 +52,6 @@ void GAME_end(){
 
 // 初始化menu
 void initialize_menu(){ 
-    SDL_Init(SDL_INIT_VIDEO);
     window = SDL_CreateWindow("Ginger Soda", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     SDL_SetRenderDrawColor(renderer, menuBackgrounColor.r, menuBackgrounColor.g, menuBackgrounColor.b, menuBackgrounColor.a);
@@ -53,14 +66,14 @@ void initialize_texture(){
     // GAME_SCREEN   
     SDL_Surface* bagpackSurface = SDL_LoadBMP("images/bagpack.bmp");
     SDL_Surface* homepageSurface = SDL_LoadBMP("images/homepage.bmp");
-    SDL_Surface* gameTileSurface = SDL_LoadBMP("images/gameTile.bmp");
-    SDL_Surface* chanceTileSurface = SDL_LoadBMP("images/chanceTile.bmp");
-    SDL_Surface* normalTileSurface = SDL_LoadBMP("images/normalTile.bmp");
-    SDL_Surface* sodaTileSurface = SDL_LoadBMP("images/sodaTile.bmp");
-    SDL_Surface* startTileSurface = SDL_LoadBMP("images/startTile.bmp");
-    SDL_Surface* storeTileSurface = SDL_LoadBMP("images/storeTile.bmp");
-    SDL_Surface* player1Surface = SDL_LoadBMP("images/black_circle.bmp");
-    SDL_Surface* player2Surface = SDL_LoadBMP("images/white_circle.bmp");
+    SDL_Surface* gameTileSurface = SDL_LoadBMP("images/tile_game.bmp");
+    SDL_Surface* chanceTileSurface = SDL_LoadBMP("images/tile_chance.bmp");
+    SDL_Surface* normalTileSurface = SDL_LoadBMP("images/tile_normal.bmp");
+    SDL_Surface* sodaTileSurface = SDL_LoadBMP("images/tile_soda.bmp");
+    SDL_Surface* startTileSurface = SDL_LoadBMP("images/tile_start.bmp");
+    SDL_Surface* storeTileSurface = SDL_LoadBMP("images/tile_store.bmp");
+    SDL_Surface* player1Surface = SDL_LoadBMP("images/circle_black.bmp");
+    SDL_Surface* player2Surface = SDL_LoadBMP("images/circle_white.bmp");
     // BAGPACK_SCREEN
     SDL_Surface* player1TitleSurface = SDL_LoadBMP("images/Player1.bmp");
     SDL_Surface* player2TitleSurface = SDL_LoadBMP("images/Player2.bmp");
@@ -182,11 +195,11 @@ int mouse_is_above( int mouse_X, int mouse_Y, SDL_Rect rect ){
 void render_map_and_player(int* MAP){
     SDL_Event event;
     int running = 1;
-    float game_round = 20; // 行動回數
+    //int game_round = 20; // 行動回數
     int currentScreen = MAIN_MENU;
     int steps = 1;
 
-    while (running && game_round) {
+    while (running) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {       // close window by the "X"
                 running = 0;
@@ -209,7 +222,10 @@ void render_map_and_player(int* MAP){
                         renderDiceAnimation(steps, MAP);                   
                         updatePlayerPosition(steps, currentPlayer, MAP);   
                         square_event(MAP, currentPlayer);                  
-                        currentPlayer = (currentPlayer + 1) % player_num;  
+                        currentPlayer = (currentPlayer + 1) % player_num;
+                        if (game_round == 0) {
+                            currentScreen = GAME_OVER_SCREEN;
+                        }
                     }
                 } else if (currentScreen == BAGPACK_SCREEN) {
                     if (mouse_is_above(mouseX, mouseY, returnButtonRect) && event.button.button == SDL_BUTTON_LEFT) {
@@ -269,6 +285,32 @@ void renderGameScreen(int* MAP, int steps) {
     SDL_RenderCopy(renderer, homepageTexture, NULL, &homepageRect);
     // 背包
     SDL_RenderCopy(renderer, bagpackTexture, NULL, &bagpackRect);
+    
+    // 文字提示玩家順序
+    SDL_Texture* textTexture = renderText("Current Player", textColor);
+    SDL_Rect textRect = {100, 200, 350, 70};
+    SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+    // 玩家
+    SDL_Rect player1Rect = {160, 290, 50, 50};
+    SDL_RenderCopy(renderer, player[0], NULL, &player1Rect);
+    SDL_Rect player2Rect = {160, 360, 50, 50};
+    SDL_RenderCopy(renderer, player[1], NULL, &player2Rect);
+    // 箭頭
+    if (currentPlayer == 0) {
+        SDL_Texture* arrowTexture = renderText("->", textColor);
+        SDL_Rect arrowRect = {100, 290, 50, 50};
+        SDL_RenderCopy(renderer, arrowTexture, NULL, &arrowRect);
+    } else {
+        SDL_Texture* arrowTexture = renderText("->", textColor);
+        SDL_Rect arrowRect = {100, 360, 50, 50};
+        SDL_RenderCopy(renderer, arrowTexture, NULL, &arrowRect);
+    }
+    // 剩餘回合數
+    char roundText[20];
+    snprintf(roundText, sizeof(roundText), "Round: %d", game_round);
+    SDL_Texture* roundTextTexture = renderText(roundText,textColor);
+    SDL_Rect roundTextRect = {100, 500, 270, 70};
+    SDL_RenderCopy(renderer, roundTextTexture, NULL, &roundTextRect);
 }
 
 void renderDiceAnimation(int finalRoll, int* MAP) {
@@ -319,6 +361,7 @@ void updatePlayerPosition(int steps, int currentPlayer, int* MAP) {
             steps--;
         }
     } else {
+        game_round--;
         while (steps){
             if ((player2.position[0]==1240 && player2.position[1]==665) || 
                 (player2.position[0]==1240 && player2.position[1]==25) ||
@@ -408,7 +451,7 @@ void square_event(int* MAP, int currentPlayer){
             printf("sell ginger soda\n");
             ginger_soda();
             // 汽水格和地圖上隨機一格交換位置
-            int randomSquare = 4 + rand() % (32 - 4);      // random number btw 4 and 28
+            int randomSquare = 4 + rand() % (32 - 4);
             int temp = MAP[randomSquare];
             MAP[randomSquare] = MAP[index];
             MAP[index] = temp;

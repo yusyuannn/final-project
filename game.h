@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #define player_num 2
 
 typedef struct {
@@ -30,6 +31,7 @@ typedef enum {
 typedef enum {
     MAIN_MENU,
     GAME_SCREEN,
+    GAME_OVER_SCREEN,
     BAGPACK_SCREEN
 } Screen;
 
@@ -104,9 +106,13 @@ SDL_Rect moneyPrintRect = {950, 250, 100, 100};
 SDL_Rect gindersodaRect = {700, 450, 200, 200};
 SDL_Rect gingersodaPrintRect = {950, 500, 100, 100};
 
-
 // 背景顏色
-SDL_Color menuBackgrounColor = {254,252,251,0xFF};
+SDL_Color menuBackgrounColor = {255, 248, 220 ,0xFF};
+
+// 字體顏色
+SDL_Color textColor = {0,0,0,0};
+// 字體
+TTF_Font* font;
 
 // 玩家設定
 int currentPlayer;
