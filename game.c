@@ -1,9 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <string.h>
-#include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL.h>
 #include "game.h"
 
 // gcc -Isrc/Include -Lsrc/lib -o game game.c -lmingw32 -lSDL2main -lSDL2
@@ -25,7 +19,7 @@ int main( int argc, char *argv[] ){
 int GAME_init(int* MAP){
     SDL_Init(SDL_INIT_VIDEO);
     TTF_Init();
-    font = TTF_OpenFont("fonts/Cubic_11_1.100_R.ttf", 24);  // 可替換字體
+    font = TTF_OpenFont("fonts/jf-openhuninn-2.0.ttf", 40);  // 可替換字體
     
     initialize_menu();
     initialize_texture();
@@ -37,9 +31,23 @@ int GAME_init(int* MAP){
 
 // 初始化menu
 void initialize_menu(){ 
+    // 視窗、renderer
     window = SDL_CreateWindow("Ginger Soda", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     SDL_SetRenderDrawColor(renderer, menuBackgrounColor.r, menuBackgrounColor.g, menuBackgrounColor.b, menuBackgrounColor.a);
+    // 輸入框
+    input_box1.rect = (SDL_Rect){760, 280, INPUT_BOX_WIDTH, INPUT_BOX_HEIGHT};
+    input_box2.rect = (SDL_Rect){760, 330+INPUT_BOX_HEIGHT+10, INPUT_BOX_WIDTH, INPUT_BOX_HEIGHT};
+    input_box3.rect = (SDL_Rect){760, 380+INPUT_BOX_HEIGHT*2+10, INPUT_BOX_WIDTH, INPUT_BOX_HEIGHT};
+    input_box1.has_focus = false;
+    input_box2.has_focus = false;
+    input_box3.has_focus = false;
+    input_box1.text[0] = '\0';
+    input_box2.text[0] = '\0';
+    input_box3.text[0] = '\0';
+    SDL_Surface *input_box_surface = SDL_LoadBMP("images/inputBar.bmp");
+    InputBoxTexture = SDL_CreateTextureFromSurface(renderer, input_box_surface);
+    SDL_FreeSurface(input_box_surface);
 }
 
 // 載入圖片為texture
@@ -68,6 +76,8 @@ void initialize_texture(){
     SDL_Surface* moneyPrintSurface = SDL_LoadBMP("images/print.bmp");
     SDL_Surface* gindersodaSurface = SDL_LoadBMP("images/money.bmp");
     SDL_Surface* gingersodaPrintSurface = SDL_LoadBMP("images/print.bmp");
+    // GAME_END_SCREEN
+    SDL_Surface* bgSurface = SDL_LoadBMP("images/gameOverBG.bmp");
 
     // MAIN_MENU
     startButtonTexture = SDL_CreateTextureFromSurface(renderer, startButtonSurface);
@@ -93,7 +103,9 @@ void initialize_texture(){
     moneyPrintTexture = SDL_CreateTextureFromSurface(renderer, moneyPrintSurface);
     gindersodaTexture = SDL_CreateTextureFromSurface(renderer, gindersodaSurface);
     gingersodaPrintTexture = SDL_CreateTextureFromSurface(renderer, gingersodaPrintSurface);
-    
+    // GAME_END_SCREEN
+    bgTexture = SDL_CreateTextureFromSurface(renderer, bgSurface);
+
     // MAIN_MENU  
     SDL_FreeSurface(startButtonSurface);
     SDL_FreeSurface(quitButtonSurface);
@@ -118,6 +130,8 @@ void initialize_texture(){
     SDL_FreeSurface(moneyPrintSurface);
     SDL_FreeSurface(gindersodaSurface);
     SDL_FreeSurface(gingersodaPrintSurface);
+    // GAME_END_SCREEN
+    SDL_FreeSurface(bgSurface);
     
     // DICE
     for (int i = 0; i < 6; ++i) {
@@ -185,10 +199,23 @@ void render_map_and_player(int* MAP){
     int currentScreen = MAIN_MENU;
     int steps = 1;
 
+    SDL_StartTextInput();
+
     while (running) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {                    // close window by the "X"
                 running = 0;
+            } else if (event.type == SDL_MOUSEMOTION) {      // move mouse
+                int x, y;
+                SDL_GetMouseState(&x, &y);
+                input_box1.has_focus = SDL_PointInRect(&(SDL_Point){x, y}, &input_box1.rect);
+                input_box2.has_focus = SDL_PointInRect(&(SDL_Point){x, y}, &input_box2.rect);
+                input_box3.has_focus = SDL_PointInRect(&(SDL_Point){x, y}, &input_box3.rect);
+                if (input_box1.has_focus || input_box2.has_focus || input_box3.has_focus) {
+                    SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_IBEAM));
+                } else {
+                    SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW));
+                }
             } else if (event.type == SDL_MOUSEBUTTONDOWN) {  // pressed mouse
                 int mouseX, mouseY;
                 SDL_GetMouseState(&mouseX, &mouseY);
@@ -220,7 +247,6 @@ void render_map_and_player(int* MAP){
                 } else if (currentScreen == GAME_OVER_SCREEN) {                 
                     if (mouse_is_above(mouseX, mouseY, restartRect)) {          // press restart
                         game_round = 3;
-                        //GAME_init(MAP);
                         initialize_map(MAP);
                         initialize_player();
                         render_map_and_player(MAP);
@@ -235,8 +261,52 @@ void render_map_and_player(int* MAP){
                     newRenderer = NULL;
                     newWindow = NULL;
                 }
+            } else if (event.type == SDL_TEXTINPUT) {       // 處理字符輸入
+                if (input_box1.has_focus) {         // 滑鼠游標位置在第一個輸入框，輸入的文字存為player2的名字
+                    if (strlen(input_box1.text) + strlen(event.text.text) < sizeof(input_box1.text) - 1) {
+                        size_t name_length = strlen(input_box1.text) + strlen(event.text.text) + 1;
+                        char* new_name = malloc(name_length);
+                        strcat(input_box1.text, event.text.text);
+                        strcpy(new_name, input_box1.text);
+                        player1.name = new_name;
+                    }
+                } else if (input_box2.has_focus) {  // 滑鼠游標位置在第二個輸入框，輸入的文字存為player1的名字
+                    if (strlen(input_box2.text) + strlen(event.text.text) < sizeof(input_box2.text) - 1) {
+                        size_t name_length = strlen(input_box2.text) + strlen(event.text.text) + 1;
+                        char* new_name = malloc(name_length);
+                        strcat(input_box2.text, event.text.text);
+                        strcpy(new_name, input_box2.text);
+                        player2.name = new_name;
+                    }
+                } else if (input_box3.has_focus) {  // 滑鼠游標位置在第三個輸入框，輸入的文字存為game round
+                    if (strlen(input_box3.text) + strlen(event.text.text) < sizeof(input_box3.text) - 1) {
+                        strcat(input_box3.text, event.text.text);
+                        game_round = atoi(input_box3.text); 
+                    }   
+                }
+            } else if (event.type == SDL_KEYDOWN) {     // 處理鍵盤按鍵
+                if (input_box1.has_focus) {
+                    if (event.key.keysym.sym == SDLK_BACKSPACE && strlen(input_box1.text) > 0) {
+                        input_box1.text[strlen(input_box1.text) - 1] = '\0';
+                    }
+                } else if (input_box2.has_focus) {
+                    if (event.key.keysym.sym == SDLK_BACKSPACE && strlen(input_box2.text) > 0) {
+                        input_box2.text[strlen(input_box2.text) - 1] = '\0';
+                    }
+                } else if (input_box3.has_focus) {
+                    if (event.key.keysym.sym == SDLK_BACKSPACE && strlen(input_box3.text) > 0) {
+                        input_box3.text[strlen(input_box3.text) - 1] = '\0';
+                    }
+                }
             }
         }
+
+        // 鍵盤游標閃爍
+        if (SDL_GetTicks() - cursor_last_time >= CURSOR_BLINK_INTERVAL) {
+            show_cursor = !show_cursor;
+            cursor_last_time = SDL_GetTicks();
+        }
+
         SDL_RenderClear(renderer);
         if (currentScreen == MAIN_MENU) {
             renderMenu();
@@ -245,16 +315,63 @@ void render_map_and_player(int* MAP){
         } else if (currentScreen == BAGPACK_SCREEN) {
             renderBagpackScreen();
         } else if (currentScreen == GAME_OVER_SCREEN) {
+            renderGameScreen(MAP, steps);
             renderGameOverScreen();
         }
         SDL_RenderPresent(renderer);
     }
+    SDL_StopTextInput();
 }
 
 void renderMenu() {
+    // start
     SDL_RenderCopy(renderer, startButtonTexture, NULL, &startButtonRect);
+    // exit
     SDL_RenderCopy(renderer, quitButtonTexture, NULL, &quitButtonRect);
+    // title
     SDL_RenderCopy(renderer, titleTexture, NULL, &titleRect);
+    // 輸入玩家名字
+    SDL_Texture* hintTexture = renderText("Enter player1's name", textColor);
+    SDL_Rect hintRect = {760, 230, 300, 40};
+    SDL_RenderCopy(renderer, hintTexture, NULL, &hintRect);
+    draw_input_box(renderer, font, &input_box1, show_cursor);
+    hintTexture = renderText("Enter player2's name ", textColor);
+    hintRect.y = 340;
+    SDL_RenderCopy(renderer, hintTexture, NULL, &hintRect);
+    draw_input_box(renderer, font, &input_box2, show_cursor);
+    hintTexture = renderText("Enter game rounds   ", textColor);
+    hintRect.y = 440;
+    SDL_RenderCopy(renderer, hintTexture, NULL, &hintRect);
+    draw_input_box(renderer, font, &input_box3, show_cursor);
+
+}
+
+void draw_input_box(SDL_Renderer *renderer, TTF_Font *font, InputBox *input_box, bool show_cursor) {
+    // 輸入框
+    SDL_RenderCopy(renderer, InputBoxTexture, NULL, &input_box->rect);
+    // 顯示文字
+    SDL_Color textColor = {0, 0, 0, 255};  // 文字顏色
+    SDL_Surface *textSurface = TTF_RenderText_Solid(font, input_box->text, textColor);
+    if (textSurface) {
+        SDL_Texture *textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+        if (textTexture) {
+            SDL_Rect textRect = {input_box->rect.x + 5, input_box->rect.y + (INPUT_BOX_HEIGHT - textSurface->h) / 2, textSurface->w, textSurface->h};
+            SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+            SDL_DestroyTexture(textTexture);
+        }
+        SDL_FreeSurface(textSurface);
+    }
+    // 鍵盤游標
+    if (show_cursor && input_box->has_focus) {
+        int text_width;
+        TTF_SizeText(font, input_box->text, &text_width, NULL); // 獲取文字大小
+        int cursor_x = input_box->rect.x + 5 + text_width + 2;  // 計算鍵盤游標位置
+        Uint8 r, g, b, a;
+        SDL_GetRenderDrawColor(renderer, &r, &g, &b, &a);       // 獲取背景顏色
+        SDL_SetRenderDrawColor(renderer, 255 - r, 255 - g, 255 - b, a);  // 設置鍵盤游標顏色為背景的相反色
+        SDL_RenderDrawLine(renderer, cursor_x, input_box->rect.y + 5, cursor_x, input_box->rect.y + INPUT_BOX_HEIGHT - 5);
+        SDL_SetRenderDrawColor(renderer, r, g, b, a);  // 恢復原来的背景顏色
+    }
 }
 
 void renderGameScreen(int* MAP, int steps) {
@@ -288,8 +405,18 @@ void renderGameScreen(int* MAP, int steps) {
     SDL_Rect textRect = {100, 200, 350, 70};
     SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
     // 玩家
+    // 一
+    SDL_Surface* player1Surface = TTF_RenderText_Solid(font, player1.name, textColor);
+    SDL_Texture* player1Texture = SDL_CreateTextureFromSurface(renderer, player1Surface);
+    SDL_Rect player1nameRect = {220, 290, player1Surface->w, player1Surface->h};
+    SDL_RenderCopy(renderer, player1Texture, NULL, &player1nameRect);
     SDL_Rect player1Rect = {160, 290, 50, 50};
     SDL_RenderCopy(renderer, player[0], NULL, &player1Rect);
+    // 二
+    SDL_Surface* player2Surface = TTF_RenderText_Solid(font, player2.name, textColor);
+    SDL_Texture* player2Texture = SDL_CreateTextureFromSurface(renderer, player2Surface);
+    SDL_Rect player2nameRect = {220, 360, player2Surface->w, player2Surface->h};
+    SDL_RenderCopy(renderer, player2Texture, NULL, &player2nameRect);
     SDL_Rect player2Rect = {160, 360, 50, 50};
     SDL_RenderCopy(renderer, player[1], NULL, &player2Rect);
     // 箭頭
@@ -316,29 +443,42 @@ void renderBagpackScreen() {
 }
 
 void renderGameOverScreen() {
-    // 背景顏色
-    //SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    //SDL_RenderClear(renderer);
-
+    SDL_RenderCopy(renderer, bgTexture, NULL, &bgRect);
     // 玩家資訊
-    char player1Info[100];
-    snprintf(player1Info, sizeof(player1Info), "Player1: Money: %d, Ginger Soda: %d", player1.money, player1.ginger_soda);
-    SDL_Surface* player1Surface = TTF_RenderText_Solid(font, player1Info, textColor);
-    SDL_Texture* player1Texture = SDL_CreateTextureFromSurface(renderer, player1Surface);
-    SDL_Rect player1Rect = {100, 100, player1Surface->w, player1Surface->h};
-    SDL_RenderCopy(renderer, player1Texture, NULL, &player1Rect);
-
-    char player2Info[100];
-    snprintf(player2Info, sizeof(player2Info), "Player2: Money: %d, Ginger Soda: %d", player2.money, player2.ginger_soda);
-    SDL_Surface* player2Surface = TTF_RenderText_Solid(font, player2Info, textColor);
-    SDL_Texture* player2Texture = SDL_CreateTextureFromSurface(renderer, player2Surface);
-    SDL_Rect player2Rect = {100, 200, player2Surface->w, player2Surface->h};
-    SDL_RenderCopy(renderer, player2Texture, NULL, &player2Rect);
-
-    SDL_Texture* restartTexture = renderText("RESTRT", textColor);
-    SDL_RenderCopy(renderer, restartTexture, NULL, &restartRect);
-    SDL_Texture* exitTexture = renderText("EXIT", textColor);
-    SDL_RenderCopy(renderer, exitTexture, NULL, &exitRect);
+    char playerInfo[100];
+    SDL_Surface* playerSurface;
+    SDL_Texture* playerTexture;
+    // 一
+    playerSurface = TTF_RenderText_Solid(font, player1.name, textColor);    // name
+    playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
+    SDL_Rect player1Rect = {(SCREEN_WIDTH-playerSurface->w)/2, 200, playerSurface->w, playerSurface->h};
+    SDL_RenderCopy(renderer, playerTexture, NULL, &player1Rect);
+    snprintf(playerInfo, sizeof(playerInfo), "Money: %d, Ginger Soda: %d", player1.money, player1.ginger_soda);
+    playerSurface = TTF_RenderText_Solid(font, playerInfo, textColor);    // info
+    playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
+    SDL_Rect player1infoRect = {(SCREEN_WIDTH-playerSurface->w)/2, 250, playerSurface->w, playerSurface->h};
+    SDL_RenderCopy(renderer, playerTexture, NULL, &player1infoRect);
+    // 二
+    playerSurface = TTF_RenderText_Solid(font, player2.name, textColor);    // name
+    playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
+    SDL_Rect player2Rect = {(SCREEN_WIDTH-playerSurface->w)/2, 300, playerSurface->w, playerSurface->h};
+    SDL_RenderCopy(renderer, playerTexture, NULL, &player2Rect);
+    snprintf(playerInfo, sizeof(playerInfo), "Money: %d, Ginger Soda: %d", player2.money, player2.ginger_soda);
+    playerSurface = TTF_RenderText_Solid(font, playerInfo, textColor);    // info
+    playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
+    SDL_Rect player2infoRect = {(SCREEN_WIDTH-playerSurface->w)/2, 350, playerSurface->w, playerSurface->h};
+    SDL_RenderCopy(renderer, playerTexture, NULL, &player2infoRect);
+    // button
+    SDL_Surface* buttonSurface;
+    SDL_Texture* buttonTexture;
+    // restart
+    buttonSurface = TTF_RenderText_Solid(font, "RESTART", textColor);
+    buttonTexture = SDL_CreateTextureFromSurface(renderer, buttonSurface);
+    SDL_RenderCopy(renderer, buttonTexture, NULL, &restartRect);
+    // exit
+    buttonSurface = TTF_RenderText_Solid(font, "EXIT", textColor);
+    buttonTexture = SDL_CreateTextureFromSurface(renderer, buttonSurface);
+    SDL_RenderCopy(renderer, buttonTexture, NULL, &exitRect);
 }
 
 void renderDiceAnimation(int finalRoll, int* MAP) {
@@ -424,6 +564,7 @@ void square_event(int* MAP, int currentPlayer){
     Player* currentPlayerPtr;
     if (currentPlayer == 0) {
         currentPlayerPtr = &player1;
+        printf("%s\n", player1.name);
     } else {
         currentPlayerPtr = &player2;
     }

@@ -60,6 +60,8 @@
     "stdbool.h": "c",
     "stdio.h": "c",
     "sdl.h": "c",
-    "game.h": "c"
+    "game.h": "c",
+    "sdl_ttf.h": "c",
+    "stdlib.h": "c"
   }
 }
