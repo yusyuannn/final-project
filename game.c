@@ -68,6 +68,23 @@ void initialize_texture(){
     SDL_Surface* player1Surface = SDL_LoadBMP("images/circle_black.bmp");
     SDL_Surface* player2Surface = SDL_LoadBMP("images/circle_white.bmp");
     // BAGPACK_SCREEN
+    SDL_Surface* player1TitleSurface = SDL_LoadBMP("images/packbagImage/Player1.bmp");
+    SDL_Surface* player2TitleSurface = SDL_LoadBMP("images/packbagImage/Player2.bmp");
+    SDL_Surface* toolTileSurface = SDL_LoadBMP("images/packbagImage/toolTile.bmp");
+    SDL_Surface* illustrationDecreaseSodaSurface = SDL_LoadBMP("images/packbagImage/illustrationDecreaseSoda.bmp");
+    SDL_Surface* illustrationIncreaseSodaSurface = SDL_LoadBMP("images/packbagImage/illustrationIncreaseSoda.bmp");
+    SDL_Surface* illustrationGamblingRouletteSurface = SDL_LoadBMP("images/packbagImage/illustrationGamblingRoulette.bmp");
+    SDL_Surface* illustrationUnknownSodaSurface = SDL_LoadBMP("images/packbagImage/illustrationUnknownSoda.bmp"); 
+    SDL_Surface* decreasingSodaSurface = SDL_LoadBMP("images/packbagImage/decreasingSoda.bmp");
+    SDL_Surface* increasingSodaSurface = SDL_LoadBMP("images/packbagImage/increasingSoda.bmp");
+    SDL_Surface* gambleRouletteSurface = SDL_LoadBMP("images/packbagImage/gambleRoulette.bmp");
+    SDL_Surface* unknownSodaSurface = SDL_LoadBMP("images/packbagImage/unknownSoda.bmp");
+    SDL_Surface* returnButtonSurface = SDL_LoadBMP("images/packbagImage/ReturnMap.bmp");
+    SDL_Surface* moneySurface = SDL_LoadBMP("images/packbagImage/money.bmp");
+    SDL_Surface* moneyPrintSurface = SDL_LoadBMP("images/packbagImage/printMoney.bmp");
+    SDL_Surface* ginderSodaSurface = SDL_LoadBMP("images/packbagImage/gingerSoda.bmp");
+    SDL_Surface* gingerSodaPrintSurface = SDL_LoadBMP("images/packbagImage/printGingerSoda.bmp");
+    
     SDL_Surface* player1TitleSurface = SDL_LoadBMP("images/Player1.bmp");
     SDL_Surface* player2TitleSurface = SDL_LoadBMP("images/Player2.bmp");
     SDL_Surface* toolIllustreSurface = SDL_LoadBMP("images/toolIilustration.bmp");
@@ -97,6 +114,21 @@ void initialize_texture(){
     // BAGPACK_SCREEN
     player1TitleTexture = SDL_CreateTextureFromSurface(renderer, player1TitleSurface);
     player2TitleTexture = SDL_CreateTextureFromSurface(renderer, player2TitleSurface);
+    toolTileTexture = SDL_CreateTextureFromSurface(renderer, toolTileSurface);  
+    illustrationDecreaseSodaTexture = SDL_CreateTextureFromSurface(renderer, illustrationDecreaseSodaSurface);
+    illustrationIncreaseSodaTexture = SDL_CreateTextureFromSurface(renderer, illustrationIncreaseSodaSurface);
+    illustrationGamblingRouletteTexture = SDL_CreateTextureFromSurface(renderer, illustrationGamblingRouletteSurface);
+    illustrationUnknownSodaTexture = SDL_CreateTextureFromSurface(renderer, illustrationUnknownSodaSurface);   
+    decreasingSodaTexture = SDL_CreateTextureFromSurface(renderer, decreasingSodaSurface);
+    increasingSodaTexture = SDL_CreateTextureFromSurface(renderer, increasingSodaSurface);
+    gambleRouletteTexture = SDL_CreateTextureFromSurface(renderer, gambleRouletteSurface);
+    unknownSodaTexture = SDL_CreateTextureFromSurface(renderer, unknownSodaSurface);    
+    returnButtonTexture = SDL_CreateTextureFromSurface(renderer, returnButtonSurface); 
+    moneyTexture = SDL_CreateTextureFromSurface(renderer, moneySurface);    
+    moneyPrintTexture = SDL_CreateTextureFromSurface(renderer, moneyPrintSurface);    
+    ginderSodaTexture = SDL_CreateTextureFromSurface(renderer, ginderSodaSurface);
+    gingerSodaPrintTexture = SDL_CreateTextureFromSurface(renderer, gingerSodaPrintSurface);
+    
     toolIllustreTexture = SDL_CreateTextureFromSurface(renderer, toolIllustreSurface);
     returnButtonTexture = SDL_CreateTextureFromSurface(renderer, returnButtonSurface);
     moneyTexture = SDL_CreateTextureFromSurface(renderer, moneySurface);
@@ -124,10 +156,20 @@ void initialize_texture(){
     // BAGPACK_SCREEN
     SDL_FreeSurface(player1TitleSurface);
     SDL_FreeSurface(player2TitleSurface);
-    SDL_FreeSurface(toolIllustreSurface);
+    SDL_FreeSurface(toolTileSurface);    
+    SDL_FreeSurface(illustrationDecreaseSodaSurface);
+    SDL_FreeSurface(illustrationIncreaseSodaSurface);
+    SDL_FreeSurface(illustrationGamblingRouletteSurface);
+    SDL_FreeSurface(illustrationUnknownSodaSurface);    
+    SDL_FreeSurface(decreasingSodaSurface);
+    SDL_FreeSurface(increasingSodaSurface);
+    SDL_FreeSurface(gambleRouletteSurface);
+    SDL_FreeSurface(unknownSodaSurface);
     SDL_FreeSurface(returnButtonSurface);
     SDL_FreeSurface(moneySurface);
     SDL_FreeSurface(moneyPrintSurface);
+    SDL_FreeSurface(ginderSodaSurface);
+    SDL_FreeSurface(gingerSodaPrintSurface);
     SDL_FreeSurface(gindersodaSurface);
     SDL_FreeSurface(gingersodaPrintSurface);
     // GAME_END_SCREEN
@@ -178,6 +220,14 @@ void initialize_player(){
     player2.money = 100;
     player1.ginger_soda = 0;
     player2.ginger_soda = 0;
+    player1.numDecreaseSoda = 0;
+    player2.numDecreaseSoda = 0;
+    player1.numIncreaseSoda = 0;
+    player2.numIncreaseSoda = 0;
+    player1.numGambleRoulette = 0;
+    player2.numGambleRoulette = 0;
+    player1.numUnknownSoda = 0;
+    player2.numUnknownSoda = 0;
     currentPlayer = 0;
     player1.dir = RIGHT;
     player2.dir = RIGHT;
@@ -432,14 +482,65 @@ void renderGameScreen(int* MAP, int steps) {
 }
 
 void renderBagpackScreen() {
-    SDL_RenderCopy(renderer, player1TitleTexture, NULL, &playerTitleRect);
-    SDL_RenderCopy(renderer, toolIllustreTexture, NULL, &toolIllustreRect);
+    // 顯示背包
+    for (int i = 0; i < 10; i++) {
+        SDL_Rect toolTileRect_size = {toolTileRect[i][0], toolTileRect[i][1], 90, 90};
+        SDL_RenderCopy(renderer, toolTileTexture, NULL, &toolTileRect_size);
+    }
     SDL_RenderCopy(renderer, returnButtonTexture, NULL, &returnButtonRect);
-
     SDL_RenderCopy(renderer, moneyTexture, NULL, &moneyRect);
+    SDL_RenderCopy(renderer, ginderSodaTexture, NULL, &ginderSodaRect);
     SDL_RenderCopy(renderer, moneyPrintTexture, NULL, &moneyPrintRect);
-    SDL_RenderCopy(renderer, gindersodaTexture, NULL, &gindersodaRect);
-    SDL_RenderCopy(renderer, gingersodaPrintTexture, NULL, &gingersodaPrintRect);
+    SDL_RenderCopy(renderer, gingerSodaPrintTexture, NULL, &gingerSodaPrintRect);
+    
+    if (currentPlayer == 0) { // 玩家1的背包
+        SDL_RenderCopy(renderer, player1TitleTexture, NULL, &playerTitleRect);
+        int p1_num1 = player1.numDecreaseSoda;
+        int p1_num2 = player1.numDecreaseSoda +  player1.numIncreaseSoda;
+        int p1_num3 = player1.numDecreaseSoda +  player1.numIncreaseSoda + player1.numGambleRoulette;
+        int p1_num4 = player1.numDecreaseSoda +  player1.numIncreaseSoda + player1.numGambleRoulette + player1.numUnknownSoda;
+            
+        for (int i = 0; i < p1_num1; i++) {
+            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
+            SDL_RenderCopy(renderer, decreasingSodaTexture, NULL, &toolRect_size);
+        }
+        for (int i = p1_num1; i < p1_num2; i++) {
+            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
+            SDL_RenderCopy(renderer, increasingSodaTexture, NULL, &toolRect_size);
+        }
+        for (int i = p1_num2; i < p1_num3; i++) {
+            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
+            SDL_RenderCopy(renderer, gambleRouletteTexture, NULL, &toolRect_size);
+        }
+        for (int i = p1_num3; i < p1_num4; i++) {
+            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
+            SDL_RenderCopy(renderer, unknownSodaTexture, NULL, &toolRect_size);
+        }
+    }      
+    else if (currentPlayer == 1) { // 玩家2的背包
+        SDL_RenderCopy(renderer, player2TitleTexture, NULL, &playerTitleRect);
+        int p2_num1 = player2.numDecreaseSoda;
+        int p2_num2 = player2.numDecreaseSoda +  player2.numIncreaseSoda;
+        int p2_num3 = player2.numDecreaseSoda +  player2.numIncreaseSoda + player2.numGambleRoulette;
+        int p2_num4 = player2.numDecreaseSoda +  player2.numIncreaseSoda + player2.numGambleRoulette + player2.numUnknownSoda;
+    
+        for (int i = 0; i < p2_num1; i++) {
+            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
+            SDL_RenderCopy(renderer, decreasingSodaTexture, NULL, &toolRect_size);
+        }
+        for (int i = p2_num1; i < p2_num2; i++) {
+            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
+            SDL_RenderCopy(renderer, increasingSodaTexture, NULL, &toolRect_size);
+        }
+        for (int i = p2_num2; i < p2_num3; i++) {
+            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
+            SDL_RenderCopy(renderer, gambleRouletteTexture, NULL, &toolRect_size);
+        }
+        for (int i = p2_num3; i < p2_num4; i++) {
+            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
+            SDL_RenderCopy(renderer, unknownSodaTexture, NULL, &toolRect_size);
+        }
+    }
 }
 
 void renderGameOverScreen() {
