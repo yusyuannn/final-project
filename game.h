@@ -10,6 +10,10 @@ typedef struct {
     int dir;
     int money;
     int ginger_soda;
+    int numDecreaseSoda;
+    int numIncreaseSoda;
+    int numGambleRoulette;
+    int numUnknownSoda;
     //int effect;
 } Player;
 
@@ -69,12 +73,20 @@ SDL_Texture* diceTextures[6];
 // BAGPACK_SCREEN
 SDL_Texture* player1TitleTexture;
 SDL_Texture* player2TitleTexture;
-SDL_Texture* toolIllustreTexture; 
-SDL_Texture* returnButtonTexture; 
-SDL_Texture* moneyTexture; 
-SDL_Texture* moneyPrintTexture; 
-SDL_Texture* gindersodaTexture; 
-SDL_Texture* gingersodaPrintTexture;
+SDL_Texture* toolTileTexture; 
+SDL_Texture* illustrationDecreaseSodaTexture;
+SDL_Texture* illustrationIncreaseSodaTexture;
+SDL_Texture* illustrationGamblingRouletteTexture;
+SDL_Texture* illustrationUnknownSodaTexture;
+SDL_Texture* decreasingSodaTexture;
+SDL_Texture* increasingSodaTexture;
+SDL_Texture* gambleRouletteTexture;
+SDL_Texture* unknownSodaTexture;
+SDL_Texture* returnButtonTexture;
+SDL_Texture* moneyTexture;
+SDL_Texture* moneyPrintTexture;    
+SDL_Texture* ginderSodaTexture;
+SDL_Texture* gingerSodaPrintTexture;
 // GAME_END_SCREEN
 SDL_Texture* restartTexture;
 SDL_Texture* exitTexture;
@@ -98,12 +110,20 @@ int mapRect[32][2] = {
 SDL_Rect diceRect = {880, 320, 80, 80};
 // BAGPACK_SCREEN
 SDL_Rect playerTitleRect = {250, 100, 200, 50};
-SDL_Rect toolIllustreRect = {100, 450, 500, 200};
+SDL_Rect toolIllustrationRect = {100, 450, 500, 200};
 SDL_Rect returnButtonRect = {700, 100, 350, 50};
-SDL_Rect moneyRect = {700, 200, 200, 200};
+SDL_Rect moneyRect = {700, 200, 150, 150};
 SDL_Rect moneyPrintRect = {950, 250, 100, 100};
-SDL_Rect gindersodaRect = {700, 450, 200, 200};
-SDL_Rect gingersodaPrintRect = {950, 500, 100, 100};
+SDL_Rect ginderSodaRect = {700, 450, 150, 150};
+SDL_Rect gingerSodaPrintRect = {950, 500, 100, 100};
+int toolTileRect[10][2] = {
+    {100, 200}, {200, 200}, {300, 200}, {400, 200}, {500, 200},
+    {100, 300}, {200, 300}, {300, 300}, {400, 300}, {500, 300}
+};
+int toolRect[10][2] = {
+    {100 + 5, 200 + 5}, {200 + 5, 200 + 5}, {300 + 5, 200 + 5}, {400 + 5, 200 + 5}, {500 + 5, 200 + 5},
+    {100 + 5, 300 + 5}, {200 + 5, 300 + 5}, {300 + 5, 300 + 5}, {400 + 5, 300 + 5}, {500 + 5, 300 + 5}
+};
 // GAME_END_SCREEN
 SDL_Rect restartRect = {465, 335, 350, 50};
 SDL_Rect exitRect = {465, 395, 350, 50};
