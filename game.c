@@ -347,6 +347,7 @@ void renderBagpackScreen() {
     SDL_RenderCopy(renderer, ginderSodaTexture, NULL, &ginderSodaRect);
     SDL_RenderCopy(renderer, moneyPrintTexture, NULL, &moneyPrintRect);
     SDL_RenderCopy(renderer, gingerSodaPrintTexture, NULL, &gingerSodaPrintRect);
+    
     if (currentPlayer == 0) { // 玩家1的背包
         SDL_RenderCopy(renderer, player1TitleTexture, NULL, &playerTitleRect);
         int p1_num1 = player1.numDecreaseSoda;
@@ -370,31 +371,31 @@ void renderBagpackScreen() {
             SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
             SDL_RenderCopy(renderer, unknownSodaTexture, NULL, &toolRect_size);
         }
+    }      
+    else if (currentPlayer == 1) { // 玩家2的背包
+        SDL_RenderCopy(renderer, player2TitleTexture, NULL, &playerTitleRect);
+        int p2_num1 = player2.numDecreaseSoda;
+        int p2_num2 = player2.numDecreaseSoda +  player2.numIncreaseSoda;
+        int p2_num3 = player2.numDecreaseSoda +  player2.numIncreaseSoda + player2.numGambleRoulette;
+        int p2_num4 = player2.numDecreaseSoda +  player2.numIncreaseSoda + player2.numGambleRoulette + player2.numUnknownSoda;
+    
+        for (int i = 0; i < p2_num1; i++) {
+            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
+            SDL_RenderCopy(renderer, decreasingSodaTexture, NULL, &toolRect_size);
+        }
+        for (int i = p2_num1; i < p2_num2; i++) {
+            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
+            SDL_RenderCopy(renderer, increasingSodaTexture, NULL, &toolRect_size);
+        }
+        for (int i = p2_num2; i < p2_num3; i++) {
+            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
+            SDL_RenderCopy(renderer, gambleRouletteTexture, NULL, &toolRect_size);
+        }
+        for (int i = p2_num3; i < p2_num4; i++) {
+            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
+            SDL_RenderCopy(renderer, unknownSodaTexture, NULL, &toolRect_size);
+        }
     }
-            
-            else if (currentPlayer == 1) { // 玩家2的背包
-                SDL_RenderCopy(renderer, player2TitleTexture, NULL, &playerTitleRect);
-                int p2_num1 = player2.numDecreaseSoda;
-                int p2_num2 = player2.numDecreaseSoda +  player2.numIncreaseSoda;
-                int p2_num3 = player2.numDecreaseSoda +  player2.numIncreaseSoda + player2.numGambleRoulette;
-                int p2_num4 = player2.numDecreaseSoda +  player2.numIncreaseSoda + player2.numGambleRoulette + player2.numUnknownSoda;
-            
-                for (int i = 0; i < p2_num1; i++) {
-                    SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
-                    SDL_RenderCopy(renderer, decreasingSodaTexture, NULL, &toolRect_size);
-                }
-                for (int i = p2_num1; i < p2_num2; i++) {
-                    SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
-                    SDL_RenderCopy(renderer, increasingSodaTexture, NULL, &toolRect_size);
-                }
-                for (int i = p2_num2; i < p2_num3; i++) {
-                    SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
-                    SDL_RenderCopy(renderer, gambleRouletteTexture, NULL, &toolRect_size);
-                }
-                for (int i = p2_num3; i < p2_num4; i++) {
-                    SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
-                    SDL_RenderCopy(renderer, unknownSodaTexture, NULL, &toolRect_size);
-                }
 }
 
 void renderGameOverScreen() {
