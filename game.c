@@ -84,15 +84,6 @@ void initialize_texture(){
     SDL_Surface* moneyPrintSurface = SDL_LoadBMP("images/packbagImage/printMoney.bmp");
     SDL_Surface* ginderSodaSurface = SDL_LoadBMP("images/packbagImage/gingerSoda.bmp");
     SDL_Surface* gingerSodaPrintSurface = SDL_LoadBMP("images/packbagImage/printGingerSoda.bmp");
-    
-    SDL_Surface* player1TitleSurface = SDL_LoadBMP("images/Player1.bmp");
-    SDL_Surface* player2TitleSurface = SDL_LoadBMP("images/Player2.bmp");
-    SDL_Surface* toolIllustreSurface = SDL_LoadBMP("images/toolIilustration.bmp");
-    SDL_Surface* returnButtonSurface = SDL_LoadBMP("images/ReturnMap.bmp");
-    SDL_Surface* moneySurface = SDL_LoadBMP("images/money.bmp");
-    SDL_Surface* moneyPrintSurface = SDL_LoadBMP("images/print.bmp");
-    SDL_Surface* gindersodaSurface = SDL_LoadBMP("images/money.bmp");
-    SDL_Surface* gingersodaPrintSurface = SDL_LoadBMP("images/print.bmp");
     // GAME_END_SCREEN
     SDL_Surface* bgSurface = SDL_LoadBMP("images/gameOverBG.bmp");
 
@@ -129,12 +120,6 @@ void initialize_texture(){
     ginderSodaTexture = SDL_CreateTextureFromSurface(renderer, ginderSodaSurface);
     gingerSodaPrintTexture = SDL_CreateTextureFromSurface(renderer, gingerSodaPrintSurface);
     
-    toolIllustreTexture = SDL_CreateTextureFromSurface(renderer, toolIllustreSurface);
-    returnButtonTexture = SDL_CreateTextureFromSurface(renderer, returnButtonSurface);
-    moneyTexture = SDL_CreateTextureFromSurface(renderer, moneySurface);
-    moneyPrintTexture = SDL_CreateTextureFromSurface(renderer, moneyPrintSurface);
-    gindersodaTexture = SDL_CreateTextureFromSurface(renderer, gindersodaSurface);
-    gingersodaPrintTexture = SDL_CreateTextureFromSurface(renderer, gingersodaPrintSurface);
     // GAME_END_SCREEN
     bgTexture = SDL_CreateTextureFromSurface(renderer, bgSurface);
 
@@ -170,8 +155,6 @@ void initialize_texture(){
     SDL_FreeSurface(moneyPrintSurface);
     SDL_FreeSurface(ginderSodaSurface);
     SDL_FreeSurface(gingerSodaPrintSurface);
-    SDL_FreeSurface(gindersodaSurface);
-    SDL_FreeSurface(gingersodaPrintSurface);
     // GAME_END_SCREEN
     SDL_FreeSurface(bgSurface);
     
