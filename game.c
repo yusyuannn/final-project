@@ -277,6 +277,22 @@ void render_map_and_player(int* MAP){
                     if (mouse_is_above(mouseX, mouseY, returnButtonRect)) {      // press return
                         currentScreen = GAME_SCREEN;
                     }
+                    if (mouse_is_above(mouseX, mouseY, toolRect)) {      // press tool
+                        SDL_Texture* currentTexture = NULL;   
+                        if (mouse_is_above(mouseX, mouseY, decreasingSodaRect)) { // press decreasing soda         
+                            currentTexture = illustrationDecreaseSodaTexture;      
+                        }
+                        else if (mouse_is_above(mouseX, mouseY, increasingSodaRect)) { // press increasing soda           
+                            currentTexture = illustrationIncreaseSodaTexture;                     
+                        }
+                        else if (mouse_is_above(mouseX, mouseY, gambleRouletteRect)) { // press gamble Roulette           
+                            currentTexture = illustrationGamblingRouletteTexture;
+                        }
+                        else if (mouse_is_above(mouseX, mouseY, unknownSodaRect)) { // press unknown soda
+                            currentTexture = illustrationUnknownSodaTexture;                     
+                        }
+                        SDL_RenderCopy(renderer, currentTexture, NULL, &toolIllustrationRect);
+                    }
                 } else if (currentScreen == GAME_OVER_SCREEN) {                 
                     if (mouse_is_above(mouseX, mouseY, restartRect)) {          // press restart
                         game_round = 3;
@@ -466,8 +482,12 @@ void renderGameScreen(int* MAP, int steps) {
 
 void renderBagpackScreen() {
     // 顯示背包
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 4; i++) {
         SDL_Rect toolTileRect_size = {toolTileRect[i][0], toolTileRect[i][1], 90, 90};
+        SDL_RenderCopy(renderer, toolTileTexture, NULL, &toolTileRect_size);
+    }
+    for (int i = 4; i < 8; i++) {
+        SDL_Rect toolTileRect_size = {toolTileRect[i][0], toolTileRect[i][1], 90, 50};
         SDL_RenderCopy(renderer, toolTileTexture, NULL, &toolTileRect_size);
     }
     SDL_RenderCopy(renderer, returnButtonTexture, NULL, &returnButtonRect);
@@ -475,54 +495,47 @@ void renderBagpackScreen() {
     SDL_RenderCopy(renderer, ginderSodaTexture, NULL, &ginderSodaRect);
     SDL_RenderCopy(renderer, moneyPrintTexture, NULL, &moneyPrintRect);
     SDL_RenderCopy(renderer, gingerSodaPrintTexture, NULL, &gingerSodaPrintRect);
-    
-    if (currentPlayer == 0) { // 玩家1的背包
+    SDL_RenderCopy(renderer, decreasingSodaTexture, NULL, &increasingSodaRect);
+    SDL_RenderCopy(renderer, increasingSodaTexture, NULL, &decreasingSodaRect);
+    SDL_RenderCopy(renderer, gambleRouletteTexture, NULL, &gambleRouletteRect);
+    SDL_RenderCopy(renderer, unknownSodaTexture, NULL, &unknownSodaRect);               
+
+    char num_textBuffer[4][10]; //字符儲存的數量與大小
+    if (currentPlayer == 0) { // player 1
+        // 顯示目前玩家
+        SDL_Surface *player1TitleSurface = TTF_RenderText_Solid(font, player1.name, textColor);
+        // SDL_Rect Text_numRect = {Text_numToolRect[i][0], Text_numToolRect[i][1], 20, 40};
+        SDL_Texture *player1TitleTexture = SDL_CreateTextureFromSurface(renderer, player1TitleSurface);            
         SDL_RenderCopy(renderer, player1TitleTexture, NULL, &playerTitleRect);
-        int p1_num1 = player1.numDecreaseSoda;
-        int p1_num2 = player1.numDecreaseSoda +  player1.numIncreaseSoda;
-        int p1_num3 = player1.numDecreaseSoda +  player1.numIncreaseSoda + player1.numGambleRoulette;
-        int p1_num4 = player1.numDecreaseSoda +  player1.numIncreaseSoda + player1.numGambleRoulette + player1.numUnknownSoda;
-            
-        for (int i = 0; i < p1_num1; i++) {
-            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
-            SDL_RenderCopy(renderer, decreasingSodaTexture, NULL, &toolRect_size);
-        }
-        for (int i = p1_num1; i < p1_num2; i++) {
-            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
-            SDL_RenderCopy(renderer, increasingSodaTexture, NULL, &toolRect_size);
-        }
-        for (int i = p1_num2; i < p1_num3; i++) {
-            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
-            SDL_RenderCopy(renderer, gambleRouletteTexture, NULL, &toolRect_size);
-        }
-        for (int i = p1_num3; i < p1_num4; i++) {
-            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
-            SDL_RenderCopy(renderer, unknownSodaTexture, NULL, &toolRect_size);
-        }
-    }      
-    else if (currentPlayer == 1) { // 玩家2的背包
+        // 顯示道具數量
+        snprintf(num_textBuffer[0], sizeof(num_textBuffer[0]), "%d", player1.numDecreaseSoda);
+        snprintf(num_textBuffer[1], sizeof(num_textBuffer[1]), "%d", player1.numIncreaseSoda);
+        snprintf(num_textBuffer[2], sizeof(num_textBuffer[2]), "%d", player1.numGambleRoulette);
+        snprintf(num_textBuffer[3], sizeof(num_textBuffer[3]), "%d", player1.numUnknownSoda);
+        for (int i = 0; i < 4; i++) {
+            SDL_Surface *Text_numToolSurface = TTF_RenderText_Solid(font, num_textBuffer[i], textColor);
+            SDL_Rect Text_numRect = {Text_numToolRect[i][0], Text_numToolRect[i][1], 20, 40};
+            SDL_Texture *Text_numToolTexture = SDL_CreateTextureFromSurface(renderer, Text_numToolSurface);            
+            SDL_RenderCopy(renderer, Text_numToolTexture, NULL, &Text_numRect);
+        }    
+    }
+    else if (currentPlayer == 1) { // player 2
+        // 顯示目前玩家
+        SDL_Surface *player2TitleSurface = TTF_RenderText_Solid(font, player2.name, textColor);
+        // SDL_Rect Text_numRect = {Text_numToolRect[i][0], Text_numToolRect[i][1], 20, 40};
+        SDL_Texture *player2TitleTexture = SDL_CreateTextureFromSurface(renderer, player2TitleSurface);            
         SDL_RenderCopy(renderer, player2TitleTexture, NULL, &playerTitleRect);
-        int p2_num1 = player2.numDecreaseSoda;
-        int p2_num2 = player2.numDecreaseSoda +  player2.numIncreaseSoda;
-        int p2_num3 = player2.numDecreaseSoda +  player2.numIncreaseSoda + player2.numGambleRoulette;
-        int p2_num4 = player2.numDecreaseSoda +  player2.numIncreaseSoda + player2.numGambleRoulette + player2.numUnknownSoda;
-    
-        for (int i = 0; i < p2_num1; i++) {
-            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
-            SDL_RenderCopy(renderer, decreasingSodaTexture, NULL, &toolRect_size);
-        }
-        for (int i = p2_num1; i < p2_num2; i++) {
-            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
-            SDL_RenderCopy(renderer, increasingSodaTexture, NULL, &toolRect_size);
-        }
-        for (int i = p2_num2; i < p2_num3; i++) {
-            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
-            SDL_RenderCopy(renderer, gambleRouletteTexture, NULL, &toolRect_size);
-        }
-        for (int i = p2_num3; i < p2_num4; i++) {
-            SDL_Rect toolRect_size = {toolRect[i][0], toolRect[i][1], 80, 80};
-            SDL_RenderCopy(renderer, unknownSodaTexture, NULL, &toolRect_size);
-        }
+        // 顯示道具數量
+        snprintf(num_textBuffer[0], sizeof(num_textBuffer[0]), "%d", player2.numDecreaseSoda);
+        snprintf(num_textBuffer[1], sizeof(num_textBuffer[1]), "%d", player2.numIncreaseSoda);
+        snprintf(num_textBuffer[2], sizeof(num_textBuffer[2]), "%d", player2.numGambleRoulette);
+        snprintf(num_textBuffer[3], sizeof(num_textBuffer[3]), "%d", player2.numUnknownSoda);
+        for (int i = 0; i < 4; i++) {
+            SDL_Surface *Text_numToolSurface = TTF_RenderText_Solid(font, num_textBuffer[i], textColor);
+            SDL_Rect Text_numRect = {Text_numToolRect[i][0], Text_numToolRect[i][1], 20, 40};
+            SDL_Texture *Text_numToolTexture = SDL_CreateTextureFromSurface(renderer, Text_numToolSurface);
+            SDL_RenderCopy(renderer, Text_numToolTexture, NULL, &Text_numRect);
+        } 
     }
 }
 
