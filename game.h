@@ -130,13 +130,17 @@ SDL_Rect moneyRect = {700, 200, 150, 150};
 SDL_Rect moneyPrintRect = {950, 250, 100, 100};
 SDL_Rect ginderSodaRect = {700, 450, 150, 150};
 SDL_Rect gingerSodaPrintRect = {950, 500, 100, 100};
-int toolTileRect[10][2] = {
-    {100, 200}, {200, 200}, {300, 200}, {400, 200}, {500, 200},
-    {100, 300}, {200, 300}, {300, 300}, {400, 300}, {500, 300}
+int toolTileRect[8][2] = {
+    {100, 200}, {200, 200}, {300, 200}, {400, 200},
+    {100, 300}, {200, 300}, {300, 300}, {400, 300}
 };
-int toolRect[10][2] = {
-    {100 + 5, 200 + 5}, {200 + 5, 200 + 5}, {300 + 5, 200 + 5}, {400 + 5, 200 + 5}, {500 + 5, 200 + 5},
-    {100 + 5, 300 + 5}, {200 + 5, 300 + 5}, {300 + 5, 300 + 5}, {400 + 5, 300 + 5}, {500 + 5, 300 + 5}
+SDL_Rect toolRect = {100, 200, 400, 100};
+SDL_Rect decreasingSodaRect = {100 + 5, 200 + 5, 80, 80};
+SDL_Rect increasingSodaRect = {200 + 5, 200 + 5, 80, 80};
+SDL_Rect gambleRouletteRect = {300 + 5, 200 + 5, 80, 80};
+SDL_Rect unknownSodaRect = {400 + 5, 200 + 5, 80, 80};
+int Text_numToolRect[4][2] = {
+    {100 + 5, 300 + 5}, {200 + 5, 300 + 5}, {300 + 5, 300 + 5}, {400 + 5, 300 + 5}
 };
 // GAME_END_SCREEN
 SDL_Rect restartRect = {360, 420, 200, 50};
