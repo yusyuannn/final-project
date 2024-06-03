@@ -84,22 +84,7 @@ SDL_Texture* square[6];
 SDL_Texture* player[player_num];
 SDL_Texture* diceTextures[6];
 // BAGPACK_SCREEN
-SDL_Texture* player1TitleTexture;
-SDL_Texture* player2TitleTexture;
-SDL_Texture* toolTileTexture; 
-SDL_Texture* illustrationDecreaseSodaTexture;
-SDL_Texture* illustrationIncreaseSodaTexture;
-SDL_Texture* illustrationGamblingRouletteTexture;
-SDL_Texture* illustrationUnknownSodaTexture;
-SDL_Texture* decreasingSodaTexture;
-SDL_Texture* increasingSodaTexture;
-SDL_Texture* gambleRouletteTexture;
-SDL_Texture* unknownSodaTexture;
-SDL_Texture* returnButtonTexture;
-SDL_Texture* moneyTexture;
-SDL_Texture* moneyPrintTexture;    
-SDL_Texture* ginderSodaTexture;
-SDL_Texture* gingerSodaPrintTexture;
+SDL_Texture* bagpackWindowTexture;
 // GAME_END_SCREEN
 SDL_Texture* restartTexture;
 SDL_Texture* exitTexture;
@@ -123,25 +108,31 @@ int mapRect[32][2] = {
 };
 SDL_Rect diceRect = {880, 320, 80, 80};
 // BAGPACK_SCREEN
-SDL_Rect playerTitleRect = {250, 100, 200, 50};
-SDL_Rect toolIllustrationRect = {100, 450, 500, 200};
-SDL_Rect returnButtonRect = {700, 100, 350, 50};
-SDL_Rect moneyRect = {700, 200, 150, 150};
-SDL_Rect moneyPrintRect = {950, 250, 100, 100};
-SDL_Rect ginderSodaRect = {700, 450, 150, 150};
-SDL_Rect gingerSodaPrintRect = {950, 500, 100, 100};
-int toolTileRect[8][2] = {
-    {100, 200}, {200, 200}, {300, 200}, {400, 200},
-    {100, 300}, {200, 300}, {300, 300}, {400, 300}
+SDL_Rect playerTitleRect = {800, 100, 200, 50};
+SDL_Rect toolIllustrationRect = {200, 310, 540, 300};
+SDL_Rect returnButtonRect = {1050, 100, 50, 50};
+SDL_Rect toolRect = {200, 100, 540, 100};
+SDL_Rect toolTitleRect = {200, 100, 100, 100};
+SDL_Rect tool_quanityRect = {200, 210, 100, 50};
+SDL_Rect decreasingSodaRect = {310, 100, 100, 100};
+SDL_Rect increasingSodaRect = {420, 100, 100, 100};
+SDL_Rect gambleRouletteRect = {530, 100, 100, 100};
+SDL_Rect unknownSodaRect = {640, 100, 100, 100};
+SDL_Rect toolIconRects[4] = {
+    {310, 100, 100, 100}, // 減少汽水的道具
+    {420, 100, 100, 100}, // 增加汽水的道具
+    {530, 100, 100, 100}, // 賭博輪盤的道具
+    {640, 100, 100, 100}  // 未知汽水的道具
 };
-SDL_Rect toolRect = {100, 200, 400, 100};
-SDL_Rect decreasingSodaRect = {100 + 5, 200 + 5, 80, 80};
-SDL_Rect increasingSodaRect = {200 + 5, 200 + 5, 80, 80};
-SDL_Rect gambleRouletteRect = {300 + 5, 200 + 5, 80, 80};
-SDL_Rect unknownSodaRect = {400 + 5, 200 + 5, 80, 80};
-int Text_numToolRect[4][2] = {
-    {100 + 5, 300 + 5}, {200 + 5, 300 + 5}, {300 + 5, 300 + 5}, {400 + 5, 300 + 5}
+SDL_Rect Text_numToolRect[4] = {
+    {310, 210, 100, 50}, 
+    {420, 210, 100, 50},
+    {530, 210, 100, 50},
+    {640, 210, 100, 50}
 };
+SDL_Rect moneyPrintRect = {1000, 335, 100, 50};
+SDL_Rect gingerSodaPrintRect = {1000, 535, 100, 50};
+SDL_Rect bagpackWindowRect = {0, 0, 1280, 720};
 // GAME_END_SCREEN
 SDL_Rect restartRect = {360, 420, 200, 50};
 SDL_Rect exitRect = {810, 420, 100, 50};
@@ -175,8 +166,17 @@ Uint32 cursor_last_time;
 bool show_cursor = true;
 // 骰子結果
 char diceEvent[30];
+// 道具解釋
+const char* toolDescriptions[5] = {
+    "這是減少汽水的道具。",
+    "這是增加汽水的道具。",
+    "這是賭博輪盤的道具。",
+    "這是未知汽水的道具。",
+    "這是第五個道具的解釋。"
+};
 
 int GAME_init(int*);
+void renderTextCentered(SDL_Renderer* renderer, TTF_Font* font, const char* text, SDL_Color textColor, SDL_Rect rect);
 void GAME_end();
 void initialize_menu();
 void initialize_texture();
