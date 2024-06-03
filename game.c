@@ -252,16 +252,16 @@ void render_map_and_player(int* MAP){
                     if (mouse_is_above(mouseX, mouseY, toolRect)) {      // press tool
                         SDL_Texture* currentTexture = NULL;   
                         if (mouse_is_above(mouseX, mouseY, decreasingSodaRect)) { // press decreasing soda         
-                            currentTexture = illustrationDecreaseSodaTexture;      
+                            // currentTexture = illustrationDecreaseSodaTexture;      
                         }
                         else if (mouse_is_above(mouseX, mouseY, increasingSodaRect)) { // press increasing soda           
-                            currentTexture = illustrationIncreaseSodaTexture;                     
+                            // currentTexture = illustrationIncreaseSodaTexture;                     
                         }
                         else if (mouse_is_above(mouseX, mouseY, gambleRouletteRect)) { // press gamble Roulette           
-                            currentTexture = illustrationGamblingRouletteTexture;
+                            // currentTexture = illustrationGamblingRouletteTexture;
                         }
                         else if (mouse_is_above(mouseX, mouseY, unknownSodaRect)) { // press unknown soda
-                            currentTexture = illustrationUnknownSodaTexture;                     
+                            // currentTexture = illustrationUnknownSodaTexture;                     
                         }
                         SDL_RenderCopy(renderer, currentTexture, NULL, &toolIllustrationRect);
                     }
