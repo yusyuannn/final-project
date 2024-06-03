@@ -20,6 +20,8 @@ int GAME_init(int* MAP){
     SDL_Init(SDL_INIT_VIDEO);
     TTF_Init();
     font = TTF_OpenFont("fonts/jf-openhuninn-2.0.ttf", 40);  // 可替換字體
+    font_player = TTF_OpenFont("fonts/jf-openhuninn-2.0.ttf", 16); 
+    font_tool= TTF_OpenFont("fonts/jf-openhuninn-2.0.ttf", 20); 
     
     initialize_menu();
     initialize_texture();
