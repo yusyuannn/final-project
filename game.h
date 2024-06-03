@@ -143,6 +143,8 @@ SDL_Color menuBackgrounColor = {253, 245, 230 ,0xFF};
 
 // 字體
 TTF_Font* font;
+TTF_Font* font_player;
+TTF_Font* font_tool;
 
 // 字體顏色
 SDL_Color textColor = {0,0,0,0};
