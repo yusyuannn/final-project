@@ -31,6 +31,7 @@ int GAME_init(int* MAP){
     return 1;
 }
 
+// 文字置中
 void renderTextCentered(SDL_Renderer* renderer, TTF_Font* font, const char* text, SDL_Color textColor, SDL_Rect rect) {
     SDL_Surface* textSurface = TTF_RenderText_Solid(font, text, textColor);
     SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
@@ -47,6 +48,49 @@ void renderTextCentered(SDL_Renderer* renderer, TTF_Font* font, const char* text
 
     SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
     SDL_DestroyTexture(textTexture);
+}
+
+// 文字自動換行
+void renderTextWrapped(SDL_Renderer *renderer, TTF_Font *font, const char *text, SDL_Color color, SDL_Rect *rect) {
+    char *textCopy = strdup(text);
+    char *word;
+    int lineWidth = 0;
+    int lineHeight = TTF_FontHeight(font);
+    int x = rect->x;
+    int y = rect->y;
+    char line[1024] = {0};
+    word = strtok(textCopy, " ");
+    while (word != NULL) {
+        int wordWidth, wordHeight;
+        TTF_SizeText(font, word, &wordWidth, &wordHeight);
+        if (lineWidth + wordWidth > rect->w) {
+            // 渲染目前文字
+            SDL_Surface *surface = TTF_RenderText_Blended(font, line, color);
+            SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+            SDL_Rect dst = {x, y, surface->w, surface->h};
+            SDL_RenderCopy(renderer, texture, NULL, &dst);
+            SDL_FreeSurface(surface);
+            SDL_DestroyTexture(texture);
+            // 移至另一行
+            y += lineHeight;
+            line[0] = '\0';
+            lineWidth = 0;
+        }
+        strcat(line, word);
+        strcat(line, " ");
+        lineWidth += wordWidth + TTF_FontLineSkip(font);
+        word = strtok(NULL, " ");
+    }
+    // 渲染最後一行
+    if (line[0] != '\0') {
+        SDL_Surface *surface = TTF_RenderText_Blended(font, line, color);
+        SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_Rect dst = {x, y, surface->w, surface->h};
+        SDL_RenderCopy(renderer, texture, NULL, &dst);
+        SDL_FreeSurface(surface);
+        SDL_DestroyTexture(texture);
+    }
+    free(textCopy);
 }
 
 // 初始化menu
@@ -77,7 +121,7 @@ void initialize_texture(){
     SDL_Surface* quitButtonSurface = SDL_LoadBMP("images/quit_button.bmp");
     SDL_Surface* titleSurface = SDL_LoadBMP("images/title.bmp");
     // GAME_SCREEN   
-    SDL_Surface* bagpackSurface = SDL_LoadBMP("images/bagpack.bmp");
+    SDL_Surface* bagpack_iconSurface = SDL_LoadBMP("images/bagpack_icon.bmp");
     SDL_Surface* homepageSurface = SDL_LoadBMP("images/homepage.bmp");
     SDL_Surface* gameTileSurface = SDL_LoadBMP("images/tile_game.bmp");
     SDL_Surface* chanceTileSurface = SDL_LoadBMP("images/tile_chance.bmp");
@@ -88,7 +132,7 @@ void initialize_texture(){
     SDL_Surface* player1Surface = SDL_LoadBMP("images/circle_black.bmp");
     SDL_Surface* player2Surface = SDL_LoadBMP("images/circle_white.bmp");
     // BAGPACK_SCREEN
-    SDL_Surface* bagpackWindowSurface = SDL_LoadBMP("images/bagpackWindow.bmp");
+    SDL_Surface* bagpackWindowSurface = SDL_LoadBMP("images/bagpack.bmp");
     // GAME_END_SCREEN
     SDL_Surface* bgSurface = SDL_LoadBMP("images/gameOverBG.bmp");
 
@@ -97,7 +141,7 @@ void initialize_texture(){
     quitButtonTexture = SDL_CreateTextureFromSurface(renderer, quitButtonSurface);
     titleTexture = SDL_CreateTextureFromSurface(renderer, titleSurface);
     // GAME_SCREEN 
-    bagpackTexture = SDL_CreateTextureFromSurface(renderer, bagpackSurface);
+    bagpack_iconTexture = SDL_CreateTextureFromSurface(renderer, bagpack_iconSurface);
     homepageTexture = SDL_CreateTextureFromSurface(renderer, homepageSurface);
     square[SQUARE_normal] = SDL_CreateTextureFromSurface(renderer, normalTileSurface);
     square[SQUARE_chance] = SDL_CreateTextureFromSurface(renderer, chanceTileSurface);
@@ -117,7 +161,7 @@ void initialize_texture(){
     SDL_FreeSurface(quitButtonSurface);
     SDL_FreeSurface(titleSurface);
     // GAME_SCREEN 
-    SDL_FreeSurface(bagpackSurface);
+    SDL_FreeSurface(bagpack_iconSurface);
     SDL_FreeSurface(homepageSurface);
     SDL_FreeSurface(gameTileSurface);
     SDL_FreeSurface(chanceTileSurface);
@@ -206,6 +250,9 @@ void render_map_and_player(int* MAP){
     int currentScreen = MAIN_MENU;
     int steps = 1;
 
+    int descriptionAppear = 0;  // 判斷道具說明字樣是否出現
+    int currentTexture = 0; // 道具說明字樣
+
     SDL_StartTextInput();
 
     while (running) {
@@ -248,24 +295,19 @@ void render_map_and_player(int* MAP){
                         }
                     }
                 } else if (currentScreen == BAGPACK_SCREEN) {                    
-                    if (mouse_is_above(mouseX, mouseY, returnButtonRect)) {      // press return
+                     if (mouse_is_above(mouseX, mouseY, returnButtonRect)) {   // press return
                         currentScreen = GAME_SCREEN;
-                    }
-                    if (mouse_is_above(mouseX, mouseY, toolRect)) {      // press tool
-                        SDL_Texture* currentTexture = NULL;   
-                        if (mouse_is_above(mouseX, mouseY, decreasingSodaRect)) { // press decreasing soda         
-                            // currentTexture = illustrationDecreaseSodaTexture;      
-                        }
-                        else if (mouse_is_above(mouseX, mouseY, increasingSodaRect)) { // press increasing soda           
-                            // currentTexture = illustrationIncreaseSodaTexture;                     
-                        }
-                        else if (mouse_is_above(mouseX, mouseY, gambleRouletteRect)) { // press gamble Roulette           
-                            // currentTexture = illustrationGamblingRouletteTexture;
-                        }
-                        else if (mouse_is_above(mouseX, mouseY, unknownSodaRect)) { // press unknown soda
-                            // currentTexture = illustrationUnknownSodaTexture;                     
-                        }
-                        SDL_RenderCopy(renderer, currentTexture, NULL, &toolIllustrationRect);
+                        descriptionAppear = 0; // 按下return時，道具解釋消失
+                    } else if (mouse_is_above(mouseX, mouseY, toolRect)) {      // press tool
+                        descriptionAppear = 1;
+                        if (mouse_is_above(mouseX, mouseY, decreasingSodaRect)) // press decreasing soda = 1         
+                            currentTexture = 1;     
+                        else if (mouse_is_above(mouseX, mouseY, increasingSodaRect))  // press increasing soda = 2             
+                            currentTexture = 2;                 
+                        else if (mouse_is_above(mouseX, mouseY, gambleRouletteRect)) // press gamble Roulette = 3          
+                            currentTexture = 3;
+                        else if (mouse_is_above(mouseX, mouseY, unknownSodaRect)) // press unknown soda = 4
+                            currentTexture = 4;       
                     }
                 } else if (currentScreen == GAME_OVER_SCREEN) {                 
                     if (mouse_is_above(mouseX, mouseY, restartRect)) {          // press restart
@@ -337,6 +379,8 @@ void render_map_and_player(int* MAP){
             renderGameScreen(MAP, steps);
         } else if (currentScreen == BAGPACK_SCREEN) {
             renderBagpackScreen();
+            if (descriptionAppear == 1)
+                renderItemDescription(currentTexture);
         } else if (currentScreen == GAME_OVER_SCREEN) {
             renderGameScreen(MAP, steps);
             renderGameOverScreen();
@@ -415,7 +459,7 @@ void renderGameScreen(int* MAP, int steps) {
     // 返回主頁
     SDL_RenderCopy(renderer, homepageTexture, NULL, &homepageRect);
     // 背包
-    SDL_RenderCopy(renderer, bagpackTexture, NULL, &bagpackRect);
+    SDL_RenderCopy(renderer, bagpack_iconTexture, NULL, &bagpackRect);
     
     // 剩餘回合數
     char roundText[20];
@@ -465,7 +509,11 @@ void renderBagpackScreen() {// 顯示背包
     renderTextCentered(renderer, font_tool, tool_quanityText, textColor, tool_quanityRect);
 
     // 顯示目前玩家
-    const char* playerText = (currentPlayer == 0) ? "Player 1" : "Player 2";
+    const char* playerName = (currentPlayer == 0) ? player1.name : player2.name;
+    char playerText[300];
+    strcpy(playerText, playerName);
+    strcat(playerText, "'s Bagpack");
+
     renderTextCentered(renderer, font_player, playerText, textColor, playerTitleRect);
     
     // 道具 & money & ginger soda數量
@@ -497,7 +545,15 @@ void renderBagpackScreen() {// 顯示背包
     // 顯示money & ginger soda數量
     renderTextCentered(renderer, font, money_textBuffer, textColor, moneyPrintRect);
     renderTextCentered(renderer, font, gingerSoda_textBuffer, textColor, gingerSodaPrintRect);
+}
 
+void renderItemDescription(int currentTexture) { // 顯示道具說明字樣
+    char toolText[1000];
+    strcpy(toolText, tool[currentTexture - 1]);
+    renderTextWrapped(renderer, font, toolText, textColor, &toolIllustrationRect); //道具標題(名稱)
+    char TextDescription[1000];
+    strcpy(TextDescription, toolDescriptions[currentTexture - 1]);
+    renderTextWrapped(renderer, font, TextDescription, textColor, &toolIllustrationRect); //道具說明
 }
 
 void renderGameOverScreen() {
@@ -756,6 +812,8 @@ int close() {
     if (renderer) SDL_DestroyRenderer(renderer);
     if (window) SDL_DestroyWindow(window);
     if (font) TTF_CloseFont(font);
+    if (font_player) TTF_CloseFont(font);
+    if (font_tool) TTF_CloseFont(font);
     TTF_Quit();
     SDL_Quit();
     return 1;
