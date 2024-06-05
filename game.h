@@ -78,7 +78,7 @@ SDL_Texture* quitButtonTexture;
 SDL_Texture* titleTexture;
 SDL_Texture *InputBoxTexture;
 // GAME_SCREEN
-SDL_Texture* bagpackTexture;
+SDL_Texture* bagpack_iconTexture;
 SDL_Texture* homepageTexture;
 SDL_Texture* square[6];
 SDL_Texture* player[player_num];
@@ -112,23 +112,23 @@ SDL_Rect playerTitleRect = {800, 100, 200, 50};
 SDL_Rect toolIllustrationRect = {200, 310, 540, 300};
 SDL_Rect returnButtonRect = {1050, 100, 50, 50};
 SDL_Rect toolRect = {200, 100, 540, 100};
-SDL_Rect toolTitleRect = {200, 100, 100, 100};
-SDL_Rect tool_quanityRect = {200, 210, 100, 50};
-SDL_Rect decreasingSodaRect = {310, 100, 100, 100};
-SDL_Rect increasingSodaRect = {420, 100, 100, 100};
-SDL_Rect gambleRouletteRect = {530, 100, 100, 100};
-SDL_Rect unknownSodaRect = {640, 100, 100, 100};
+SDL_Rect toolTitleRect = {210, 160, 100, 100};
+SDL_Rect tool_quanityRect = {210, 270, 100, 50};
+SDL_Rect decreasingSodaRect = {320, 160, 100, 100};
+SDL_Rect increasingSodaRect = {430, 160, 100, 100};
+SDL_Rect gambleRouletteRect = {540, 160, 100, 100};
+SDL_Rect unknownSodaRect = {650, 160, 100, 100};
 SDL_Rect toolIconRects[4] = {
-    {310, 100, 100, 100}, // 減少汽水的道具
-    {420, 100, 100, 100}, // 增加汽水的道具
-    {530, 100, 100, 100}, // 賭博輪盤的道具
-    {640, 100, 100, 100}  // 未知汽水的道具
+    {320, 160, 100, 100}, // 減少汽水的道具
+    {430, 160, 100, 100}, // 增加汽水的道具
+    {540, 160, 100, 100}, // 賭博輪盤的道具
+    {650, 160, 100, 100}  // 未知汽水的道具
 };
 SDL_Rect Text_numToolRect[4] = {
-    {310, 210, 100, 50}, 
-    {420, 210, 100, 50},
-    {530, 210, 100, 50},
-    {640, 210, 100, 50}
+    {320, 270, 100, 50}, 
+    {430, 270, 100, 50},
+    {540, 270, 100, 50},
+    {650, 270, 100, 50}
 };
 SDL_Rect moneyPrintRect = {1000, 335, 100, 50};
 SDL_Rect gingerSodaPrintRect = {1000, 535, 100, 50};
@@ -169,16 +169,22 @@ bool show_cursor = true;
 // 骰子結果
 char diceEvent[30];
 // 道具解釋
-const char* toolDescriptions[5] = {
-    "這是減少汽水的道具。",
-    "這是增加汽水的道具。",
-    "這是賭博輪盤的道具。",
-    "這是未知汽水的道具。",
-    "這是第五個道具的解釋。"
+const char* tool[4] = {
+    "Decreasing Soda: ",
+    "Increasing Soda: ",
+    "Gamble Roulette: ",
+    "Unknown Soda: ",
+};
+const char* toolDescriptions[4] = {
+    "Decrease the speed of 2 pathsssssssssssss sssssssssss",
+    "increase the speed of 2 pathssssssssssssss ssssssssssss",
+    "2% of bankrupt ttttttttttttttttttt tttttttttttttttt",
+    "special effect this is not error, just try it...",
 };
 
 int GAME_init(int*);
 void renderTextCentered(SDL_Renderer* renderer, TTF_Font* font, const char* text, SDL_Color textColor, SDL_Rect rect);
+void renderTextWrapped(SDL_Renderer *renderer, TTF_Font *font, const char *text, SDL_Color color, SDL_Rect *rect);
 void GAME_end();
 void initialize_menu();
 void initialize_texture();
@@ -198,6 +204,7 @@ void renderMenu();
 void renderGameScreen(int*, int);
 void renderGameOverScreen();
 void renderBagpackScreen();
+void renderItemDescription(int);
 void renderDiceAnimation(int, int*);
 void draw_input_box(SDL_Renderer *renderer, TTF_Font *font, InputBox *input_box, bool show_cursor);
 SDL_Texture* renderText(const char* message, SDL_Color color);
